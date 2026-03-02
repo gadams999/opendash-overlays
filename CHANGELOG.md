@@ -5,6 +5,22 @@ All notable changes to Wheel Overlay will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2026-03-02
+
+> Baseline release for the new standalone repository. Includes CI/CD fixes, .NET 10 workflow alignment, and repo structure improvements.
+
+### Added
+- **Standalone Repository**: Migrated from `gadams999/obrl` monorepo to dedicated `gadams999/wheel-overlay` repository
+
+### Changed
+- **CI Workflows**: Updated all GitHub Actions workflows from .NET 8.0.x to .NET 10.0.x
+- **WiX Toolset**: Updated CI WiX version from 4.0.4 to 4.0.5 to match local tooling
+- **Repository Structure**: Reorganized scripts into `scripts/` directory and docs into `docs/`
+
+### Fixed
+- **CI Test Failures**: Added skip guards for WPF window tests unreliable in headless CI environments
+- **Git Tracking**: Fixed `.gitignore` pattern that excluded PowerShell test scripts from `scripts/` directory
+
 ## [0.5.3](https://github.com/gadams999/obrl/compare/v0.5.2...v0.5.3) (2026-01-13)
 
 > Critical bug fix release resolving application exit issues and implementing single-instance enforcement.

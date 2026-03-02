@@ -7,9 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <Version>0.5.4</Version>
-    <AssemblyVersion>0.5.4</AssemblyVersion>
-    <FileVersion>0.5.4</FileVersion>
+    <Version>0.5.5</Version>
+    <AssemblyVersion>0.5.5</AssemblyVersion>
+    <FileVersion>0.5.5</FileVersion>
     <StartupObject>WheelOverlay.Program</StartupObject>
     <!-- Fix for SingleFile crash (likely DirectInput native DLLs) -->
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
