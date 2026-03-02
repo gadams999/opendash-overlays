@@ -23,15 +23,15 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
 
     - name: Validate Property Tests
       run: |
         Write-Host "Validating property test directives..."
-        $result = .\Scripts\Validate-PropertyTests.ps1
+        $result = .\scripts\Validate-PropertyTests.ps1
         if ($LASTEXITCODE -ne 0) {
           Write-Error "Property test validation failed. Some tests are missing conditional compilation directives."
-          Write-Host "Run '.\Scripts\Add-PropertyTestDirectives.ps1' to fix the issues."
+          Write-Host "Run '.\scripts\Add-PropertyTestDirectives.ps1' to fix the issues."
           exit 1
         }
         Write-Host "All property tests have correct directives."
@@ -82,13 +82,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
 
-    - name: Install WiX Toolset v4.0.4
-      run: dotnet tool install --global wix --version 4.0.4
+    - name: Install WiX Toolset v4.0.5
+      run: dotnet tool install --global wix --version 4.0.5
 
     - name: Build MSI Installer
-      run: .\build_msi.ps1
+      run: .\scripts\build_msi.ps1
       shell: pwsh
 
     - name: Get Version

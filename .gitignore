@@ -2,7 +2,11 @@
 .kiro/
 !.kiro/steering/
 
+# Temporary working notes
+temp/
+
 # Build results
+build_log.txt
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -45,12 +49,13 @@ test_*
 *_test.*
 *.test.*
 test.*
-# But keep test project directories and source files
+# But keep test project directories, source files, and Scripts
 !WheelOverlay.Tests/
 !**/*.Tests.*
 !**/Tests/**
 !**/*Test*.cs
 !**/*Tests*.cs
+!scripts/*.ps1
 
 # Test results and coverage
 TestResults/
