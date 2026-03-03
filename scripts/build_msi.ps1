@@ -32,6 +32,13 @@ Write-Host ""
 # Step 2: Copy files to Package directory
 Write-Host "[2/4] Preparing Package directory..." -ForegroundColor Yellow
 $packageDir = ".\Package"
+$installerDir = ".\installer"
+$assetsDir = ".\assets"
+
+# Ensure Package directory exists
+if (-not (Test-Path $packageDir)) {
+    New-Item -ItemType Directory -Path $packageDir | Out-Null
+}
 
 # Copy ALL published files (self-contained includes .NET runtime)
 Write-Host "  Copying all published files..." -ForegroundColor Gray
@@ -39,6 +46,21 @@ Copy-Item "$publishDir\*" -Destination $packageDir -Recurse -Force -Exclude "*.p
 
 # Copy LICENSE.txt from root
 Copy-Item ".\LICENSE.txt" -Destination $packageDir -Force
+
+# Copy installer WiX source files into Package/
+Write-Host "  Copying installer sources into Package/..." -ForegroundColor Gray
+Copy-Item -Path "$installerDir\*.wxs" -Destination $packageDir -Force
+
+# Copy .wix/ config directory into Package/
+$wixConfigSrc = "$installerDir\.wix"
+$wixConfigDst = "$packageDir\.wix"
+if (Test-Path $wixConfigDst) {
+    Remove-Item $wixConfigDst -Recurse -Force
+}
+Copy-Item -Path $wixConfigSrc -Destination $wixConfigDst -Recurse -Force
+
+# Copy app icon from assets into Package/
+Copy-Item -Path "$assetsDir\app.ico" -Destination $packageDir -Force
 
 # Generate WiX components for all files
 Write-Host "  Generating WiX components..." -ForegroundColor Gray

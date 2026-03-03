@@ -1,5 +1,13 @@
 # Tasks: v0.6.0 Enhancements
 
+## Task 0: Restructure Package directory — separate installer sources from build output
+- [x] 0.1 Create `installer/` directory and move WiX source files (`Package.wxs`, `CustomUI.wxs`, `.wix/wix.json`) from `Package/` to `installer/`
+- [x] 0.2 Move `Package/app.ico` to `assets/app.ico`
+- [x] 0.3 Update `Package.wxs` icon `SourceFile` path to reference `app.ico` from the build output directory (copied by build script)
+- [x] 0.4 Update `build_release.ps1` to copy installer sources (`installer/*.wxs`, `installer/.wix/`) and `assets/app.ico` into `Package/` before WiX build
+- [x] 0.5 Update `.gitignore` to keep `Package/` fully ignored (pure build output) and track `installer/` directory
+- [x] 0.6 Verify MSI build still works with the new directory structure
+
 ## Task 1: Add Dial enum value and ThemePreference model
 - [ ] 1.1 Add `Dial` value to the `DisplayLayout` enum in `WheelOverlay/Models/AppSettings.cs`
 - [ ] 1.2 Add `ThemePreference` enum (`System`, `Light`, `Dark`) to `WheelOverlay/Models/AppSettings.cs`

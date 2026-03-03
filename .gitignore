@@ -24,6 +24,8 @@ bld/
 # Publish output
 publish-test/
 Publish/
+
+# Package/ is pure build output (WiX sources live in installer/)
 Package/
 
 # Visual Studio cache/options

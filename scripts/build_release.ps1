@@ -33,4 +33,37 @@ if ($LASTEXITCODE -eq 0) {
     exit 1
 }
 
+# --- MSI Installer Build ---
+Write-Host ""
+Write-Host "Preparing MSI installer build..." -ForegroundColor Cyan
+
+$packageDir = ".\Package"
+$installerDir = ".\installer"
+$assetsDir = ".\assets"
+
+# Ensure Package directory exists
+if (-not (Test-Path $packageDir)) {
+    New-Item -ItemType Directory -Path $packageDir | Out-Null
+}
+
+# Copy installer WiX source files into Package/
+Write-Host "Copying installer sources into Package/..." -ForegroundColor Yellow
+Copy-Item -Path "$installerDir\*.wxs" -Destination $packageDir -Force
+Write-Host "  Copied *.wxs files"
+
+# Copy .wix/ config directory into Package/
+$wixConfigSrc = "$installerDir\.wix"
+$wixConfigDst = "$packageDir\.wix"
+if (Test-Path $wixConfigDst) {
+    Remove-Item $wixConfigDst -Recurse -Force
+}
+Copy-Item -Path $wixConfigSrc -Destination $wixConfigDst -Recurse -Force
+Write-Host "  Copied .wix/ config directory"
+
+# Copy app icon from assets into Package/
+Copy-Item -Path "$assetsDir\app.ico" -Destination $packageDir -Force
+Write-Host "  Copied app.ico from assets/"
+
+Write-Host "Installer sources staged in Package/ successfully." -ForegroundColor Green
+
 Pop-Location

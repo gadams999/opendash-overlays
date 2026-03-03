@@ -49,10 +49,19 @@ If you need to build MSI manually:
    dotnet publish WheelOverlay/WheelOverlay.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o Publish
    ```
 
-2. Copy files to Package directory:
+2. Prepare Package directory (build output):
    ```powershell
+   # Create Package/ if it doesn't exist (it's gitignored)
+   New-Item -ItemType Directory -Path Package -Force
+
+   # Copy published app files
    Copy-Item "Publish\*" -Destination Package -Recurse -Force -Exclude "*.pdb"
    Copy-Item "LICENSE.txt" -Destination Package -Force
+
+   # Copy installer sources from installer/ into Package/
+   Copy-Item "installer\*.wxs" -Destination Package -Force
+   Copy-Item "installer\.wix" -Destination "Package\.wix" -Recurse -Force
+   Copy-Item "assets\app.ico" -Destination Package -Force
    ```
 
 3. Build MSI:
