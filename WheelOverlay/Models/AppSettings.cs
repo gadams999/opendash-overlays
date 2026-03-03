@@ -7,13 +7,22 @@ using System.Text.Json.Serialization;
 
 namespace WheelOverlay.Models
 {
-    public enum DisplayLayout
+public enum DisplayLayout
     {
         Single,
         Vertical,
         Horizontal,
-        Grid
+        Grid,
+        Dial
     }
+
+    public enum ThemePreference
+    {
+        System,
+        Light,
+        Dark
+    }
+
 
     public class AppSettings
     {
@@ -47,6 +56,9 @@ namespace WheelOverlay.Models
 
         // Animation Settings (New in v0.5.0)
         public bool EnableAnimations { get; set; } = true;
+
+        // Theme Preference (New in v0.6.0)
+        public ThemePreference ThemePreference { get; set; } = ThemePreference.System;
 
         // Profiles (New in v0.2.0)
         public List<Profile> Profiles { get; set; } = new List<Profile>();

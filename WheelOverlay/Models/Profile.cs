@@ -24,6 +24,12 @@ namespace WheelOverlay.Models
         public string FontWeight { get; set; } = "Bold";
         public string TextRenderingMode { get; set; } = "Aliased";
         
+        // Dial Layout Settings (v0.6.0)
+        // User-facing scale 1–10 (0.5 increments). Internally mapped to 0.3–0.75.
+        public double DialKnobScale { get; set; } = 5.0;
+        // Gap between cog tips and text labels, as percentage of knob radius (10–20)
+        public int DialLabelGapPercent { get; set; } = 15;
+        
         /// <summary>
         /// Validates that the grid configuration can accommodate the position count.
         /// </summary>

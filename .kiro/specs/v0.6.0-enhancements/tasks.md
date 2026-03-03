@@ -9,30 +9,30 @@
 - [x] 0.6 Verify MSI build still works with the new directory structure
 
 ## Task 1: Add Dial enum value and ThemePreference model
-- [ ] 1.1 Add `Dial` value to the `DisplayLayout` enum in `WheelOverlay/Models/AppSettings.cs`
-- [ ] 1.2 Add `ThemePreference` enum (`System`, `Light`, `Dark`) to `WheelOverlay/Models/AppSettings.cs`
-- [ ] 1.3 Add `ThemePreference ThemePreference` property with default `ThemePreference.System` to the `AppSettings` class
-- [ ] 1.4 Verify existing `JsonStringEnumConverter` in `FromJson` handles both new enum values without changes
+- [x] 1.1 Add `Dial` value to the `DisplayLayout` enum in `WheelOverlay/Models/AppSettings.cs`
+- [x] 1.2 Add `ThemePreference` enum (`System`, `Light`, `Dark`) to `WheelOverlay/Models/AppSettings.cs`
+- [x] 1.3 Add `ThemePreference ThemePreference` property with default `ThemePreference.System` to the `AppSettings` class
+- [x] 1.4 Verify existing `JsonStringEnumConverter` in `FromJson` handles both new enum values without changes
 
 ## Task 2: Create DialPositionConfig data model
-- [ ] 2.1 Create `WheelOverlay/Models/DialPositionConfig.cs` with `DefaultAngles` dictionary mapping positions 1–8 to angles (0°=12 o'clock, clockwise)
-- [ ] 2.2 Implement `GetAngles(int positionCount)` method that returns `DefaultAngles` for 8 positions and falls back to even distribution for other counts
-- [ ] 2.3 Implement `AngleToPoint(double angleDegrees, double radius)` helper that converts angle + radius to (X, Y) offset from center
+- [x] 2.1 Create `WheelOverlay/Models/DialPositionConfig.cs` with `DefaultAngles` dictionary mapping positions 1–8 to angles (0°=12 o'clock, clockwise)
+- [x] 2.2 Implement `GetAngles(int positionCount)` method that returns `DefaultAngles` for 8 positions and falls back to even distribution for other counts
+- [x] 2.3 Implement `AngleToPoint(double angleDegrees, double radius)` helper that converts angle + radius to (X, Y) offset from center
 
 ## Task 3: Create DialLayout view
-- [ ] 3.1 Create `WheelOverlay/Views/DialLayout.xaml` as a Canvas-based UserControl following the same pattern as existing layout views (GridLayout, VerticalLayout, etc.)
-- [ ] 3.2 Implement `DialLayout.xaml.cs` code-behind that computes label positions from `DialPositionConfig.GetAngles()` and places TextBlocks on the Canvas
-- [ ] 3.3 Wire up `IsSelected` foreground color binding and flash animation triggers matching existing layout behavior
-- [ ] 3.4 Wire up font size, font family, and text rendering mode bindings from the active profile
-- [ ] 3.5 Handle `SizeChanged` event to recalculate label positions when Canvas resizes
-- [ ] 3.6 Add "Device Not Found" message display matching other layouts
+- [x] 3.1 Create `WheelOverlay/Views/DialLayout.xaml` as a Canvas-based UserControl following the same pattern as existing layout views (GridLayout, VerticalLayout, etc.)
+- [x] 3.2 Implement `DialLayout.xaml.cs` code-behind that computes label positions from `DialPositionConfig.GetAngles()` and places TextBlocks on the Canvas
+- [x] 3.3 Wire up `IsSelected` foreground color binding and flash animation triggers matching existing layout behavior
+- [x] 3.4 Wire up font size, font family, and text rendering mode bindings from the active profile
+- [x] 3.5 Handle `SizeChanged` event to recalculate label positions when Canvas resizes
+- [x] 3.6 Add "Device Not Found" message display matching other layouts
 
 ## Task 4: Create and iterate on rotary knob graphic (manual, developer-in-the-loop)
-- [ ]* 4.1 Create initial rotary knob graphic asset (PNG or SVG) for the Dial layout background
-- [ ]* 4.2 Add the knob graphic to `WheelOverlay/Resources/` and center it on the DialLayout Canvas behind the position labels
-- [ ]* 4.3 Run the application in test mode with Dial layout selected, visually verify knob appearance and label alignment
-- [ ]* 4.4 Iterate on the knob graphic (size, detail, transparency, contrast) until satisfied with the visual result
-- [ ]* 4.5 Verify the knob graphic renders correctly at different overlay window sizes
+- [x] 4.1 Create initial rotary knob graphic asset (PNG or SVG) for the Dial layout background
+- [x] 4.2 Add the knob graphic to `WheelOverlay/Resources/` and center it on the DialLayout Canvas behind the position labels
+- [x] 4.3 Run the application in test mode with Dial layout selected, visually verify knob appearance and label alignment
+- [x] 4.4 Iterate on the knob graphic (size, detail, transparency, contrast) until satisfied with the visual result
+- [x] 4.5 Verify the knob graphic renders correctly at different overlay window sizes
 
 ## Task 5: Integrate Dial layout into MainWindow
 - [ ] 5.1 Add `DialTemplate` DataTemplate in `MainWindow.xaml` Window.Resources referencing `DialLayout` UserControl

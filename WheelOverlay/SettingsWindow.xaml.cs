@@ -36,6 +36,10 @@ namespace WheelOverlay
         private TextBlock? _targetExeDisplay;
         private System.Windows.Controls.Button? _browseButton;
         private System.Windows.Controls.Button? _clearButton;
+        
+        // Dial layout controls (v0.6.0)
+        private Slider? _dialKnobScaleSlider;
+        private Slider? _dialLabelGapSlider;
 
         private StackPanel? _settingsPanel;
         private SettingsViewModel? _viewModel;
@@ -207,6 +211,10 @@ namespace WheelOverlay
             if (_nonSelectedColorTextBox != null) _settings.NonSelectedTextColor = _nonSelectedColorTextBox.Text;
             if (_spacingSlider != null) _settings.ItemSpacing = (int)_spacingSlider.Value;
             if (_opacitySlider != null) _settings.MoveOverlayOpacity = (int)_opacitySlider.Value;
+            
+            // Save dial knob scale (round to nearest 0.5 to avoid float drift)
+            if (_dialKnobScaleSlider != null) profile.DialKnobScale = Math.Round(_dialKnobScaleSlider.Value * 2) / 2;
+            if (_dialLabelGapSlider != null) profile.DialLabelGapPercent = (int)_dialLabelGapSlider.Value;
         }
 
         private void ShowDisplaySettings()
@@ -561,6 +569,7 @@ namespace WheelOverlay
             _layoutComboBox.Items.Add(CreateComboBoxItem("Vertical List", "Vertical"));
             _layoutComboBox.Items.Add(CreateComboBoxItem("Horizontal List", "Horizontal"));
             _layoutComboBox.Items.Add(CreateComboBoxItem("Grid", "Grid"));
+            _layoutComboBox.Items.Add(CreateComboBoxItem("Dial", "Dial"));
             
             foreach (System.Windows.Controls.ComboBoxItem item in _layoutComboBox.Items)
             {
@@ -571,6 +580,34 @@ namespace WheelOverlay
                 }
             }
             _settingsPanel.Children.Add(_layoutComboBox);
+
+            // --- 4b. Dial Knob Scale (only visible when Dial layout selected) ---
+            if (currentProfile.Layout == DisplayLayout.Dial)
+            {
+                AddLabel("Dial Knob Size");
+                _dialKnobScaleSlider = AddSlider(1, 10, 0.5, Math.Round(currentProfile.DialKnobScale * 2) / 2); // snap to nearest 0.5
+                _dialKnobScaleSlider.IsSnapToTickEnabled = true;
+                var knobScaleHelp = new TextBlock
+                {
+                    Text = "Scale the knob graphic (1 = smallest, 10 = largest). Text stays the same size.",
+                    FontSize = 10,
+                    Foreground = System.Windows.Media.Brushes.Gray,
+                    Margin = new Thickness(0, 2, 0, 10)
+                };
+                _settingsPanel.Children.Add(knobScaleHelp);
+
+                AddLabel("Label Gap");
+                _dialLabelGapSlider = AddSlider(10, 20, 1, currentProfile.DialLabelGapPercent);
+                _dialLabelGapSlider.IsSnapToTickEnabled = true;
+                var gapHelp = new TextBlock
+                {
+                    Text = "Gap between cog edge and text (% of knob radius)",
+                    FontSize = 10,
+                    Foreground = System.Windows.Media.Brushes.Gray,
+                    Margin = new Thickness(0, 2, 0, 10)
+                };
+                _settingsPanel.Children.Add(gapHelp);
+            }
 
             // --- 5. Font Size & Spacing ---
             AddLabel("Font Size");
