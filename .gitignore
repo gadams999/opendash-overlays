@@ -39,6 +39,7 @@ Package/
 *.exe
 *.pdb
 *.cache
+*.zip
 
 # Test files (excluding legitimate test projects)
 *test*.ps1
