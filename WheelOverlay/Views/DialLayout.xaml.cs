@@ -271,6 +271,13 @@ namespace WheelOverlay.Views
                 double tbW = tb.DesiredSize.Width;
                 double tbH = tb.DesiredSize.Height;
 
+                // Estimate the width of a single character for anchor offset.
+                // The arrow should point to the middle of the first character
+                // (right side) or the middle of the last character (left side).
+                string labelText = tb.Text ?? "";
+                double charW = labelText.Length > 0 ? tbW / labelText.Length : 0;
+                double halfChar = charW / 2.0;
+
                 double angleDeg = angles[positionIndex];
                 var (x, y) = DialPositionConfig.AngleToPoint(angleDeg, labelRadius);
 
@@ -279,22 +286,26 @@ namespace WheelOverlay.Views
 
                 if (a >= 350 || a <= 10)
                 {
+                    // Top (12 o'clock): center text horizontally
                     left = centerX + x - tbW / 2.0;
                     top = centerY + y - tbH;
                 }
                 else if (a >= 170 && a <= 190)
                 {
+                    // Bottom (6 o'clock): center text horizontally
                     left = centerX + x - tbW / 2.0;
                     top = centerY + y;
                 }
                 else if (a > 10 && a < 170)
                 {
-                    left = centerX + x;
+                    // Right side: arrow points to middle of first character
+                    left = centerX + x - halfChar;
                     top = centerY + y - tbH / 2.0;
                 }
                 else
                 {
-                    left = centerX + x - tbW;
+                    // Left side: arrow points to middle of last character
+                    left = centerX + x - tbW + halfChar;
                     top = centerY + y - tbH / 2.0;
                 }
 
