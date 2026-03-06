@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
+using WheelOverlay.Services;
 
 namespace WheelOverlay
 {
@@ -10,6 +12,8 @@ namespace WheelOverlay
     /// </summary>
     public partial class AboutWindow : Window
     {
+        private ThemeService? _themeService;
+
         public AboutWindow()
         {
             InitializeComponent();
@@ -23,6 +27,46 @@ namespace WheelOverlay
                     Close();
                 }
             };
+        }
+
+        /// <summary>
+        /// Sets the ThemeService and subscribes to theme changes for icon swapping.
+        /// Call this after construction, before ShowDialog.
+        /// </summary>
+        public void SetThemeService(ThemeService themeService)
+        {
+            _themeService = themeService;
+            UpdateAboutIcon(_themeService.IsDarkMode);
+            _themeService.ThemeChanged += OnThemeChanged;
+        }
+
+        private void OnThemeChanged(object? sender, bool isDark)
+        {
+            UpdateAboutIcon(isDark);
+        }
+
+        private void UpdateAboutIcon(bool isDark)
+        {
+            try
+            {
+                var fileName = isDark ? "about_icon_light.png" : "about_icon_dark.png";
+                var path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+                if (System.IO.File.Exists(path))
+                {
+                    AboutIcon.Source = new BitmapImage(new Uri(path, UriKind.Absolute));
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Error("Failed to update about icon", ex);
+            }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (_themeService != null)
+                _themeService.ThemeChanged -= OnThemeChanged;
+            base.OnClosed(e);
         }
 
         private void LoadVersionInfo()

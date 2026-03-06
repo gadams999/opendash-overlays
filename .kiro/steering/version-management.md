@@ -61,10 +61,10 @@ When updating the version in `installer/Package.wxs`, update the `Version` attri
 
 ```xml
 <!-- OLD -->
-<Package Name="Wheel Overlay" Manufacturer="OBRL" Version="0.5.2" ...>
+<Package Name="Wheel Overlay" Manufacturer="Gavin Adams" Version="0.5.2" ...>
 
 <!-- NEW -->
-<Package Name="Wheel Overlay" Manufacturer="OBRL" Version="0.5.3" ...>
+<Package Name="Wheel Overlay" Manufacturer="Gavin Adams" Version="0.5.3" ...>
 ```
 
 ### Version Updates for Releases

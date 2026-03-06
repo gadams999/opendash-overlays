@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package Name="Wheel Overlay" 
-           Manufacturer="OBRL" 
+           Manufacturer="Gavin Adams" 
            Version="0.6.0" 
            UpgradeCode="19d19028-090f-4888-912b-650058e100f7"
            Compressed="yes"
@@ -840,7 +840,7 @@
                   WorkingDirectory="INSTALLFOLDER"
                   Icon="AppIcon"/>
         <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
-        <RegistryValue Root="HKCU" Key="Software\OBRL\WheelOverlay" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+        <RegistryValue Root="HKCU" Key="Software\Gavin Adams\WheelOverlay" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
       </Component>
     </DirectoryRef>
   </Fragment>
@@ -854,7 +854,7 @@
                 Target="[INSTALLFOLDER]WheelOverlay.exe"
                 WorkingDirectory="INSTALLFOLDER"
                 Icon="AppIcon"/>
-      <RegistryValue Root="HKCU" Key="Software\OBRL\WheelOverlay" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes"/>
+      <RegistryValue Root="HKCU" Key="Software\Gavin Adams\WheelOverlay" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes"/>
     </Component>
   </Fragment>
 </Wix>

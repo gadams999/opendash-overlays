@@ -85,7 +85,7 @@
 - [x] 14.4 Add unit test verifying `ThemePreference` enum has exactly three values and `DisplayLayout` enum includes `Dial`
 - [x] 14.5 Add unit tests verifying both `LightTheme.xaml` and `DarkTheme.xaml` contain all required resource keys
 
-## Task 15 (Optional): Theme-appropriate icons
-- [ ]* 15.1 Create light and dark variants of the system tray icon and add icon-swap logic in `ThemeChanged` handler
-- [ ]* 15.2 Create light and dark variants of Settings Window toolbar icons/decorative graphics
-- [ ]* 15.3 Manually test all icon and graphic assets in both Light and Dark modes for visual quality
+## Task 15 (Optional): Theme-appropriate icons (developer-in-the-loop created)
+- [x] 15.1 Use the light and dark variants of the system tray icon from assets/icons and add icon-swap logic in `ThemeChanged` handler
+- [x] 15.2 Use the light and dark variants of Settings Window toolbar icons/decorative graphics from assets/icons including paneled and unpaneled ones
+- [x] 15.3 Manually test all icon and graphic assets in both Light and Dark modes for visual quality

@@ -27,9 +27,9 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- App Icon -->
+        <!-- App Icon (theme-aware, swapped in code-behind) -->
         <Image Grid.Row="0" 
-               Source="about_icon.png" 
+               x:Name="AboutIcon"
                Width="80" 
                Height="80" 
                Margin="0,0,0,15"
@@ -64,7 +64,7 @@
         <TextBlock Grid.Row="4" 
                    Margin="0,0,0,10">
             <Hyperlink x:Name="GitHubHyperlink"
-                       NavigateUri="https://github.com/gadams999/obrl/tree/main/wheel_overlay"
+                       NavigateUri="https://github.com/gadams999/wheel-overlay"
                        RequestNavigate="Hyperlink_RequestNavigate"
                        Foreground="{DynamicResource ThemeAccent}">
                 GitHub Repository

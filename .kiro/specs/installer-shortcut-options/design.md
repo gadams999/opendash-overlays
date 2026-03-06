@@ -138,8 +138,8 @@ The existing shortcut components in Package.wxs will be modified to include cond
 
 **Registry Tracking:**
 The existing registry values in each shortcut component already serve as KeyPath and track installation:
-- Start Menu: `HKCU\Software\OBRL\WheelOverlay\installed`
-- Desktop: `HKCU\Software\OBRL\WheelOverlay\DesktopShortcut`
+- Start Menu: `HKCU\Software\Gavin Adams\WheelOverlay\installed`
+- Desktop: `HKCU\Software\Gavin Adams\WheelOverlay\DesktopShortcut`
 
 **Uninstall Logic:**
 - WiX automatically tracks which components were installed

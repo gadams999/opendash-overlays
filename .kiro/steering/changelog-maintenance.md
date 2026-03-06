@@ -151,7 +151,7 @@ Follow the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format:
 
 2. **Add Comparison Link** at bottom:
    ```markdown
-   [0.4.0]: https://github.com/gadams999/obrl/compare/v0.3.0...v0.4.0
+   [0.4.0]: https://github.com/gadams999/wheel-overlay/compare/v0.3.0...v0.4.0
    ```
 
 3. **Create New Unreleased Section** for next version:
