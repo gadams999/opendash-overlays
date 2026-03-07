@@ -10,7 +10,6 @@
         mc:Ignorable="d"
         Title="WheelOverlay" Height="Auto" Width="Auto"
         SizeToContent="WidthAndHeight"
-        Icon="app.ico"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -32,6 +31,9 @@
             </DataTemplate>
             <DataTemplate x:Key="GridTemplate">
                 <v:GridLayout />
+            </DataTemplate>
+            <DataTemplate x:Key="DialTemplate">
+                <v:DialLayout />
             </DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
@@ -67,6 +69,9 @@
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding Settings.ActiveProfile.Layout}" Value="Grid">
                                         <Setter Property="ContentTemplate" Value="{StaticResource GridTemplate}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Settings.ActiveProfile.Layout}" Value="Dial">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource DialTemplate}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

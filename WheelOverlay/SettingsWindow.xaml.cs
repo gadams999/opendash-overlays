@@ -36,6 +36,18 @@ namespace WheelOverlay
         private TextBlock? _targetExeDisplay;
         private System.Windows.Controls.Button? _browseButton;
         private System.Windows.Controls.Button? _clearButton;
+        
+        // Dial layout controls (v0.6.0)
+        private Slider? _dialKnobScaleSlider;
+        private Slider? _dialLabelGapSlider;
+        
+        // Theme preference combo (v0.6.0)
+        private System.Windows.Controls.ComboBox? _themePreferenceComboBox;
+        
+        // Grid-specific controls container (v0.6.0 - hidden for non-Grid layouts)
+        private StackPanel? _gridControlsPanel;
+        // Dial-specific controls container (v0.6.0 - hidden for non-Dial layouts)
+        private StackPanel? _dialControlsPanel;
 
         private StackPanel? _settingsPanel;
         private SettingsViewModel? _viewModel;
@@ -207,6 +219,16 @@ namespace WheelOverlay
             if (_nonSelectedColorTextBox != null) _settings.NonSelectedTextColor = _nonSelectedColorTextBox.Text;
             if (_spacingSlider != null) _settings.ItemSpacing = (int)_spacingSlider.Value;
             if (_opacitySlider != null) _settings.MoveOverlayOpacity = (int)_opacitySlider.Value;
+            
+            // Save dial knob scale (round to nearest 0.5 to avoid float drift)
+            if (_dialKnobScaleSlider != null) profile.DialKnobScale = Math.Round(_dialKnobScaleSlider.Value * 2) / 2;
+            if (_dialLabelGapSlider != null) profile.DialLabelGapPercent = (int)_dialLabelGapSlider.Value;
+
+            // Save theme preference
+            if (_themePreferenceComboBox?.SelectedItem is System.Windows.Controls.ComboBoxItem themeItem && themeItem.Tag != null)
+            {
+                _settings.ThemePreference = Enum.Parse<ThemePreference>(themeItem.Tag.ToString()!);
+            }
         }
 
         private void ShowDisplaySettings()
@@ -222,6 +244,7 @@ namespace WheelOverlay
 
             // Title
             var title = new TextBlock { Text = "Display & Device Settings", FontSize = 20, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 20) };
+            title.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
             _settingsPanel.Children.Add(title);
 
             // --- 1. Device Selection ---
@@ -352,15 +375,7 @@ namespace WheelOverlay
             _viewModel!.SelectedProfile = currentProfile!;
             
             // --- Conditional Visibility Section (overlay-visibility-and-ui-improvements) ---
-            AddLabel("Conditional Visibility");
-            var visibilityHelp = new TextBlock 
-            { 
-                Text = "Show overlay only when this application is running:", 
-                FontSize = 11, 
-                Foreground = System.Windows.Media.Brushes.Gray, 
-                Margin = new Thickness(0, 0, 0, 5) 
-            };
-            _settingsPanel.Children.Add(visibilityHelp);
+            AddLabel("Conditional Visibility", "Show overlay only when this application is running");
             
             var filePanel = new StackPanel 
             { 
@@ -374,6 +389,7 @@ namespace WheelOverlay
                 Margin = new Thickness(0, 0, 10, 0),
                 MinWidth = 200
             };
+            _targetExeDisplay.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
             UpdateTargetDisplay(currentProfile.TargetExecutablePath);
             
             _browseButton = new System.Windows.Controls.Button 
@@ -398,8 +414,8 @@ namespace WheelOverlay
             _settingsPanel.Children.Add(filePanel);
             
             // --- NEW v0.5.0: Position Count Configuration ---
-            AddLabel("Number of Positions");
-            _positionCountComboBox = new System.Windows.Controls.ComboBox { Margin = new Thickness(0, 0, 0, 5) };
+            AddLabel("Number of Positions", "Configure how many positions your wheel has (2-20)");
+            _positionCountComboBox = new System.Windows.Controls.ComboBox { Margin = new Thickness(0, 0, 0, 15) };
             foreach (int count in _viewModel.AvailablePositionCounts)
             {
                 _positionCountComboBox.Items.Add(count);
@@ -407,21 +423,21 @@ namespace WheelOverlay
             _positionCountComboBox.SelectedItem = _viewModel.SelectedProfile.PositionCount;
             _positionCountComboBox.SelectionChanged += PositionCount_Changed;
             _settingsPanel.Children.Add(_positionCountComboBox);
-            
-            var positionCountHelp = new TextBlock 
-            { 
-                Text = "Configure how many positions your wheel has (2-20)", 
-                FontSize = 10, 
-                Foreground = System.Windows.Media.Brushes.Gray, 
-                Margin = new Thickness(0, 2, 0, 10) 
-            };
-            _settingsPanel.Children.Add(positionCountHelp);
 
-            // --- NEW v0.5.0: Grid Dimensions Configuration ---
-            AddLabel("Grid Layout Dimensions");
+            // --- NEW v0.5.0: Grid Dimensions Configuration (wrapped for visibility toggle) ---
+            _gridControlsPanel = new StackPanel();
+            _gridControlsPanel.Visibility = currentProfile.Layout == DisplayLayout.Grid 
+                ? Visibility.Visible 
+                : Visibility.Collapsed;
+            
+            var gridDimLabel = new TextBlock { Text = "Grid Layout Dimensions", FontSize = 14, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 10, 0, 5) };
+            gridDimLabel.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+            _gridControlsPanel.Children.Add(gridDimLabel);
+            
             var gridDimensionsPanel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 5) };
             
             var rowsLabel = new TextBlock { Text = "Rows:", Width = 50, VerticalAlignment = VerticalAlignment.Center };
+            rowsLabel.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
             _gridRowsComboBox = new System.Windows.Controls.ComboBox { Width = 60, Margin = new Thickness(0, 0, 10, 0) };
             foreach (int row in _viewModel.AvailableRows)
             {
@@ -431,8 +447,10 @@ namespace WheelOverlay
             _gridRowsComboBox.SelectionChanged += GridDimensions_Changed;
             
             var timesLabel = new TextBlock { Text = "×", Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center };
+            timesLabel.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
             
             var columnsLabel = new TextBlock { Text = "Columns:", Width = 70, VerticalAlignment = VerticalAlignment.Center };
+            columnsLabel.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
             _gridColumnsComboBox = new System.Windows.Controls.ComboBox { Width = 60 };
             foreach (int col in _viewModel.AvailableColumns)
             {
@@ -446,16 +464,16 @@ namespace WheelOverlay
             gridDimensionsPanel.Children.Add(timesLabel);
             gridDimensionsPanel.Children.Add(columnsLabel);
             gridDimensionsPanel.Children.Add(_gridColumnsComboBox);
-            _settingsPanel.Children.Add(gridDimensionsPanel);
+            _gridControlsPanel.Children.Add(gridDimensionsPanel);
 
-            // --- NEW v0.5.0: Grid Preview ---
+            // --- Grid Preview ---
             var gridPreviewBorder = new Border 
             { 
-                BorderBrush = System.Windows.Media.Brushes.Gray, 
                 BorderThickness = new Thickness(1), 
                 Padding = new Thickness(10), 
                 Margin = new Thickness(0, 5, 0, 10) 
             };
+            gridPreviewBorder.SetResourceReference(Border.BorderBrushProperty, "ThemeControlBorder");
             
             var gridPreviewPanel = new StackPanel();
             
@@ -465,6 +483,7 @@ namespace WheelOverlay
                 FontSize = 11, 
                 Margin = new Thickness(0, 0, 0, 5) 
             };
+            _gridCapacityText.SetResourceReference(TextBlock.ForegroundProperty, "ThemeSubtext");
             gridPreviewPanel.Children.Add(_gridCapacityText);
             
             _gridPreviewControl = new ItemsControl { Margin = new Thickness(0, 5, 0, 0) };
@@ -479,7 +498,7 @@ namespace WheelOverlay
             
             var cellTemplate = new DataTemplate();
             var borderFactory = new FrameworkElementFactory(typeof(Border));
-            borderFactory.SetValue(Border.BorderBrushProperty, System.Windows.Media.Brushes.LightGray);
+            borderFactory.SetResourceReference(Border.BorderBrushProperty, "ThemeControlBorder");
             borderFactory.SetValue(Border.BorderThicknessProperty, new Thickness(1));
             borderFactory.SetValue(Border.WidthProperty, 30.0);
             borderFactory.SetValue(Border.HeightProperty, 30.0);
@@ -490,6 +509,7 @@ namespace WheelOverlay
             textBlockFactory.SetValue(TextBlock.HorizontalAlignmentProperty, System.Windows.HorizontalAlignment.Center);
             textBlockFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
             textBlockFactory.SetValue(TextBlock.FontSizeProperty, 10.0);
+            textBlockFactory.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
             
             borderFactory.AppendChild(textBlockFactory);
             cellTemplate.VisualTree = borderFactory;
@@ -497,10 +517,13 @@ namespace WheelOverlay
             
             gridPreviewPanel.Children.Add(_gridPreviewControl);
             gridPreviewBorder.Child = gridPreviewPanel;
-            _settingsPanel.Children.Add(gridPreviewBorder);
+            _gridControlsPanel.Children.Add(gridPreviewBorder);
 
-            // --- NEW v0.5.0: Suggested Dimensions ---
-            AddLabel("Suggested Dimensions");
+            // --- Suggested Dimensions ---
+            var sugDimLabel = new TextBlock { Text = "Suggested Dimensions", FontSize = 14, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 10, 0, 5) };
+            sugDimLabel.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+            _gridControlsPanel.Children.Add(sugDimLabel);
+            
             _suggestedDimensionsControl = new ItemsControl { Margin = new Thickness(0, 5, 0, 15) };
             _suggestedDimensionsControl.ItemsSource = _viewModel.SuggestedDimensions;
             
@@ -517,7 +540,8 @@ namespace WheelOverlay
             buttonTemplate.VisualTree = buttonFactory;
             _suggestedDimensionsControl.ItemTemplate = buttonTemplate;
             
-            _settingsPanel.Children.Add(_suggestedDimensionsControl);
+            _gridControlsPanel.Children.Add(_suggestedDimensionsControl);
+            _settingsPanel.Children.Add(_gridControlsPanel);
 
             // --- 3. Dynamic Text Labels ---
             AddLabel($"Position Labels");
@@ -543,6 +567,7 @@ namespace WheelOverlay
             {
                 var panel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 0) };
                 var label = new TextBlock { Text = $"Position {i + 1}:", Width = 80, VerticalAlignment = VerticalAlignment.Center };
+                label.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
                 var val = (i < currentProfile.TextLabels.Count) ? currentProfile.TextLabels[i] : "";
                 var textBox = new System.Windows.Controls.TextBox { Width = 200, Text = val };
                 _labelTextBoxes[i] = textBox;
@@ -561,6 +586,7 @@ namespace WheelOverlay
             _layoutComboBox.Items.Add(CreateComboBoxItem("Vertical List", "Vertical"));
             _layoutComboBox.Items.Add(CreateComboBoxItem("Horizontal List", "Horizontal"));
             _layoutComboBox.Items.Add(CreateComboBoxItem("Grid", "Grid"));
+            _layoutComboBox.Items.Add(CreateComboBoxItem("Dial", "Dial"));
             
             foreach (System.Windows.Controls.ComboBoxItem item in _layoutComboBox.Items)
             {
@@ -571,12 +597,152 @@ namespace WheelOverlay
                 }
             }
             _settingsPanel.Children.Add(_layoutComboBox);
+            
+            // Update grid/dial controls visibility when layout changes
+            _layoutComboBox.SelectionChanged += (s, e) =>
+            {
+                if (_layoutComboBox.SelectedItem is ComboBoxItem selectedItem)
+                {
+                    var layoutTag = selectedItem.Tag?.ToString();
+                    if (_gridControlsPanel != null)
+                        _gridControlsPanel.Visibility = layoutTag == "Grid" ? Visibility.Visible : Visibility.Collapsed;
+                    if (_dialControlsPanel != null)
+                        _dialControlsPanel.Visibility = layoutTag == "Dial" ? Visibility.Visible : Visibility.Collapsed;
+                }
+            };
+
+            // --- 4b. Dial-specific controls (always built, visibility toggled) ---
+            _dialControlsPanel = new StackPanel();
+            _dialControlsPanel.Visibility = currentProfile.Layout == DisplayLayout.Dial
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
+            // Labeled separator: --- Dial Settings ---
+            var dialSepContainer = new Grid { Margin = new Thickness(0, 15, 0, 10) };
+            dialSepContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            dialSepContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            dialSepContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var dialSepLeft = new Separator { VerticalAlignment = VerticalAlignment.Center };
+            dialSepLeft.SetResourceReference(Separator.BackgroundProperty, "ThemeControlBorder");
+            Grid.SetColumn(dialSepLeft, 0);
+
+            var dialSepText = new TextBlock { Text = "Dial Settings", FontSize = 12, Margin = new Thickness(10, 0, 10, 0) };
+            dialSepText.SetResourceReference(TextBlock.ForegroundProperty, "ThemeSubtext");
+            Grid.SetColumn(dialSepText, 1);
+
+            var dialSepRight = new Separator { VerticalAlignment = VerticalAlignment.Center };
+            dialSepRight.SetResourceReference(Separator.BackgroundProperty, "ThemeControlBorder");
+            Grid.SetColumn(dialSepRight, 2);
+
+            dialSepContainer.Children.Add(dialSepLeft);
+            dialSepContainer.Children.Add(dialSepText);
+            dialSepContainer.Children.Add(dialSepRight);
+            _dialControlsPanel.Children.Add(dialSepContainer);
+
+            var dialKnobLabel = new TextBlock { Text = "Dial Knob Size", FontSize = 14, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 10, 0, 5) };
+            dialKnobLabel.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+            var dialKnobInfo = new Border
+            {
+                Width = 16,
+                Height = 16,
+                CornerRadius = new CornerRadius(8),
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(6, 10, 0, 5),
+                VerticalAlignment = VerticalAlignment.Center,
+                Cursor = System.Windows.Input.Cursors.Help,
+                Background = System.Windows.Media.Brushes.Transparent
+            };
+            dialKnobInfo.SetResourceReference(Border.BorderBrushProperty, "ThemeSubtext");
+            var dialKnobInfoText = new TextBlock
+            {
+                Text = "i",
+                FontSize = 10,
+                FontStyle = FontStyles.Italic,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            dialKnobInfoText.SetResourceReference(TextBlock.ForegroundProperty, "ThemeSubtext");
+            dialKnobInfo.Child = dialKnobInfoText;
+            ToolTipService.SetInitialShowDelay(dialKnobInfo, 0);
+            ToolTipService.SetShowDuration(dialKnobInfo, 30000);
+            dialKnobInfo.ToolTip = "Scale the knob graphic (1 = smallest, 10 = largest). Text stays the same size.";
+            var dialKnobLabelPanel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+            dialKnobLabelPanel.Children.Add(dialKnobLabel);
+            dialKnobLabelPanel.Children.Add(dialKnobInfo);
+            _dialControlsPanel.Children.Add(dialKnobLabelPanel);
+            _dialKnobScaleSlider = AddSlider(1, 10, 0.5, Math.Round(currentProfile.DialKnobScale * 2) / 2);
+            _dialKnobScaleSlider.IsSnapToTickEnabled = true;
+            // AddSlider adds a wrapper panel to _settingsPanel — move it into _dialControlsPanel
+            var knobSliderWrapper = (UIElement)_settingsPanel.Children[_settingsPanel.Children.Count - 1];
+            _settingsPanel.Children.Remove(knobSliderWrapper);
+            _dialControlsPanel.Children.Add(knobSliderWrapper);
+
+            var dialGapLabel = new TextBlock { Text = "Label Gap", FontSize = 14, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 10, 0, 5) };
+            dialGapLabel.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+            var dialGapInfo = new Border
+            {
+                Width = 16,
+                Height = 16,
+                CornerRadius = new CornerRadius(8),
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(6, 10, 0, 5),
+                VerticalAlignment = VerticalAlignment.Center,
+                Cursor = System.Windows.Input.Cursors.Help,
+                Background = System.Windows.Media.Brushes.Transparent
+            };
+            dialGapInfo.SetResourceReference(Border.BorderBrushProperty, "ThemeSubtext");
+            var dialGapInfoText = new TextBlock
+            {
+                Text = "i",
+                FontSize = 10,
+                FontStyle = FontStyles.Italic,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            dialGapInfoText.SetResourceReference(TextBlock.ForegroundProperty, "ThemeSubtext");
+            dialGapInfo.Child = dialGapInfoText;
+            ToolTipService.SetInitialShowDelay(dialGapInfo, 0);
+            ToolTipService.SetShowDuration(dialGapInfo, 30000);
+            dialGapInfo.ToolTip = "Gap between cog edge and text (% of knob radius)";
+            var dialGapLabelPanel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+            dialGapLabelPanel.Children.Add(dialGapLabel);
+            dialGapLabelPanel.Children.Add(dialGapInfo);
+            _dialControlsPanel.Children.Add(dialGapLabelPanel);
+            _dialLabelGapSlider = AddSlider(10, 20, 1, currentProfile.DialLabelGapPercent);
+            _dialLabelGapSlider.IsSnapToTickEnabled = true;
+            var gapSliderWrapper = (UIElement)_settingsPanel.Children[_settingsPanel.Children.Count - 1];
+            _settingsPanel.Children.Remove(gapSliderWrapper);
+            _dialControlsPanel.Children.Add(gapSliderWrapper);
+            _settingsPanel.Children.Add(_dialControlsPanel);
 
             // --- 5. Font Size & Spacing ---
-            AddLabel("Font Size");
+            var fontSepContainer = new Grid { Margin = new Thickness(0, 15, 0, 10) };
+            fontSepContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            fontSepContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            fontSepContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var fontSepLeft = new Separator { VerticalAlignment = VerticalAlignment.Center };
+            fontSepLeft.SetResourceReference(Separator.BackgroundProperty, "ThemeControlBorder");
+            Grid.SetColumn(fontSepLeft, 0);
+
+            var fontSepText = new TextBlock { Text = "Font Settings", FontSize = 12, Margin = new Thickness(10, 0, 10, 0) };
+            fontSepText.SetResourceReference(TextBlock.ForegroundProperty, "ThemeSubtext");
+            Grid.SetColumn(fontSepText, 1);
+
+            var fontSepRight = new Separator { VerticalAlignment = VerticalAlignment.Center };
+            fontSepRight.SetResourceReference(Separator.BackgroundProperty, "ThemeControlBorder");
+            Grid.SetColumn(fontSepRight, 2);
+
+            fontSepContainer.Children.Add(fontSepLeft);
+            fontSepContainer.Children.Add(fontSepText);
+            fontSepContainer.Children.Add(fontSepRight);
+            _settingsPanel.Children.Add(fontSepContainer);
+
+            AddLabel("Font Size", "Text size for overlay labels (10-80 pt)");
             _fontSizeSlider = AddSlider(10, 80, 1, _settings.FontSize);
 
-            AddLabel("Item Spacing (pixels)");
+            AddLabel("Item Spacing", "Space between items in pixels");
             _spacingSlider = AddSlider(0, 20, 1, _settings.ItemSpacing);
         }
 
@@ -586,7 +752,27 @@ namespace WheelOverlay
             _settingsPanel.Children.Clear();
 
             var title = new TextBlock { Text = "Appearance Settings", FontSize = 20, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 20) };
+            title.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
             _settingsPanel.Children.Add(title);
+
+            AddLabel("Theme");
+            _themePreferenceComboBox = new System.Windows.Controls.ComboBox { Width = 200, HorizontalAlignment = System.Windows.HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 15) };
+            _themePreferenceComboBox.SetResourceReference(System.Windows.Controls.ComboBox.BackgroundProperty, "ThemeControlBackground");
+            _themePreferenceComboBox.SetResourceReference(System.Windows.Controls.ComboBox.ForegroundProperty, "ThemeControlForeground");
+            _themePreferenceComboBox.SetResourceReference(System.Windows.Controls.ComboBox.BorderBrushProperty, "ThemeControlBorder");
+            _themePreferenceComboBox.Items.Add(CreateComboBoxItem("System Default", "System"));
+            _themePreferenceComboBox.Items.Add(CreateComboBoxItem("Light", "Light"));
+            _themePreferenceComboBox.Items.Add(CreateComboBoxItem("Dark", "Dark"));
+            // Select current preference
+            foreach (System.Windows.Controls.ComboBoxItem item in _themePreferenceComboBox.Items)
+            {
+                if (item.Tag?.ToString() == _settings.ThemePreference.ToString())
+                {
+                    _themePreferenceComboBox.SelectedItem = item;
+                    break;
+                }
+            }
+            _settingsPanel.Children.Add(_themePreferenceComboBox);
 
             AddLabel("Selected Text Color");
             _selectedColorTextBox = AddColorPicker(_settings.SelectedTextColor);
@@ -623,18 +809,106 @@ namespace WheelOverlay
             _settingsPanel.Children.Clear();
 
             var title = new TextBlock { Text = "Advanced Settings", FontSize = 20, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 20) };
+            title.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
             _settingsPanel.Children.Add(title);
 
-            AddLabel("Move Overlay Opacity (%)");
+            AddLabel("Move Overlay Opacity", "Overlay transparency when repositioning (0 = invisible, 100 = fully opaque)");
             _opacitySlider = AddSlider(0, 100, 10, _settings.MoveOverlayOpacity);
+
+            // --- Review or Reset Settings section ---
+            var separator = new Border
+            {
+                BorderThickness = new Thickness(0, 1, 0, 0),
+                Margin = new Thickness(0, 20, 0, 0)
+            };
+            separator.SetResourceReference(Border.BorderBrushProperty, "ThemeControlBorder");
+            _settingsPanel.Children.Add(separator);
+
+            var sectionLabel = new TextBlock
+            {
+                Text = "Review or Reset Settings",
+                FontSize = 16,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 20, 0, 10)
+            };
+            sectionLabel.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+            _settingsPanel.Children.Add(sectionLabel);
+
+            var openFolderButton = new System.Windows.Controls.Button
+            {
+                Content = "Open Settings Folder",
+                Width = 180,
+                Margin = new Thickness(0, 0, 0, 8),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+                ToolTip = "Opens the folder containing your settings and log files in File Explorer"
+            };
+            openFolderButton.SetResourceReference(System.Windows.Controls.Control.BackgroundProperty, "ThemeControlBackground");
+            openFolderButton.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, "ThemeControlForeground");
+            openFolderButton.SetResourceReference(System.Windows.Controls.Control.BorderBrushProperty, "ThemeControlBorder");
+            openFolderButton.Click += OpenSettingsFolder_Click;
+            _settingsPanel.Children.Add(openFolderButton);
+
+            var resetButton = new System.Windows.Controls.Button
+            {
+                Content = "Reset to Defaults",
+                Width = 180,
+                Margin = new Thickness(0, 0, 0, 8),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+                ToolTip = "Deletes your settings file and restores all options to their default values"
+            };
+            resetButton.SetResourceReference(System.Windows.Controls.Control.BackgroundProperty, "ThemeControlBackground");
+            resetButton.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, "ThemeControlForeground");
+            resetButton.SetResourceReference(System.Windows.Controls.Control.BorderBrushProperty, "ThemeControlBorder");
+            resetButton.Click += ResetSettings_Click;
+            _settingsPanel.Children.Add(resetButton);
         }
 
-        private void AddLabel(string text)
+        private void AddLabel(string text, string? tooltip = null)
         {
             if (_settingsPanel == null) return;
-            var label = new TextBlock { Text = text, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 5) };
-            _settingsPanel.Children.Add(label);
+
+            var container = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 5) };
+
+            var label = new TextBlock { Text = text, FontSize = 14, FontWeight = FontWeights.SemiBold };
+            label.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+            container.Children.Add(label);
+
+            if (tooltip != null)
+            {
+                var infoBorder = new Border
+                {
+                    Width = 16,
+                    Height = 16,
+                    CornerRadius = new CornerRadius(8),
+                    BorderThickness = new Thickness(1),
+                    Margin = new Thickness(6, 0, 0, 0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Cursor = System.Windows.Input.Cursors.Help,
+                    Background = System.Windows.Media.Brushes.Transparent
+                };
+                infoBorder.SetResourceReference(Border.BorderBrushProperty, "ThemeSubtext");
+
+                var infoText = new TextBlock
+                {
+                    Text = "i",
+                    FontSize = 10,
+                    FontStyle = FontStyles.Italic,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                infoText.SetResourceReference(TextBlock.ForegroundProperty, "ThemeSubtext");
+                infoBorder.Child = infoText;
+
+                ToolTipService.SetInitialShowDelay(infoBorder, 0);
+                ToolTipService.SetShowDuration(infoBorder, 30000);
+                infoBorder.ToolTip = tooltip;
+
+                container.Children.Add(infoBorder);
+            }
+
+            _settingsPanel.Children.Add(container);
         }
+
 
         private Slider AddSlider(double min, double max, double tickFreq, double value)
         {
@@ -642,6 +916,7 @@ namespace WheelOverlay
             var panel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 15) };
             var slider = new Slider { Minimum = min, Maximum = max, Width = 200, TickFrequency = tickFreq, IsSnapToTickEnabled = true, Value = value };
             var valueText = new TextBlock { Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+            valueText.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
             valueText.SetBinding(TextBlock.TextProperty, new System.Windows.Data.Binding("Value") { Source = slider });
             panel.Children.Add(slider);
             panel.Children.Add(valueText);
@@ -818,6 +1093,72 @@ namespace WheelOverlay
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        // --- Settings File Management ---
+
+        private void OpenSettingsFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var directory = AppSettings.GetSettingsDirectory();
+                if (System.IO.Directory.Exists(directory))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", directory);
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(
+                        "Settings folder does not exist yet. It will be created when settings are first saved.",
+                        "Settings Folder",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                Services.LogService.Error("Failed to open settings folder", ex);
+            }
+        }
+
+        private void ResetSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var result = System.Windows.MessageBox.Show(
+                "This will reset all settings to their default values.\n\nAre you sure?",
+                "Reset Settings",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var settingsPath = AppSettings.GetSettingsPath();
+                if (System.IO.File.Exists(settingsPath))
+                {
+                    System.IO.File.Delete(settingsPath);
+                    Services.LogService.Info("Settings file deleted by user request (reset to defaults)");
+                }
+
+                // Reload fresh defaults
+                _settings = AppSettings.Load();
+                _settings.Save();
+
+                // Notify the main app so the overlay picks up the new settings
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
+
+                // Close settings window — user can reopen to see defaults
+                Close();
+            }
+            catch (Exception ex)
+            {
+                Services.LogService.Error("Failed to reset settings", ex);
+                System.Windows.MessageBox.Show(
+                    "Failed to reset settings. You can manually delete the file from the settings folder.",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
         
         // --- Conditional Visibility UI Methods (overlay-visibility-and-ui-improvements) ---

@@ -7,13 +7,22 @@ using System.Text.Json.Serialization;
 
 namespace WheelOverlay.Models
 {
-    public enum DisplayLayout
+public enum DisplayLayout
     {
         Single,
         Vertical,
         Horizontal,
-        Grid
+        Grid,
+        Dial
     }
+
+    public enum ThemePreference
+    {
+        System,
+        Light,
+        Dark
+    }
+
 
     public class AppSettings
     {
@@ -48,6 +57,9 @@ namespace WheelOverlay.Models
         // Animation Settings (New in v0.5.0)
         public bool EnableAnimations { get; set; } = true;
 
+        // Theme Preference (New in v0.6.0)
+        public ThemePreference ThemePreference { get; set; } = ThemePreference.System;
+
         // Profiles (New in v0.2.0)
         public List<Profile> Profiles { get; set; } = new List<Profile>();
         public Guid SelectedProfileId { get; set; } = Guid.Empty;
@@ -60,10 +72,21 @@ namespace WheelOverlay.Models
             "BavarianSimTec Alpha"
         };
 
-        private static readonly string SettingsPath = Path.Combine(
+        private static readonly string SettingsDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "WheelOverlay",
-            "settings.json");
+            "WheelOverlay");
+
+        private static readonly string SettingsPath = Path.Combine(SettingsDirectory, "settings.json");
+
+        /// <summary>
+        /// Returns the directory containing settings and log files.
+        /// </summary>
+        public static string GetSettingsDirectory() => SettingsDirectory;
+
+        /// <summary>
+        /// Returns the full path to the settings JSON file.
+        /// </summary>
+        public static string GetSettingsPath() => SettingsPath;
 
         public static AppSettings Load()
         {

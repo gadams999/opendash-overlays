@@ -25,6 +25,7 @@ The `.github/workflows/release.yml` workflow has been updated to build the MSI i
 - Runs `scripts/build_msi.ps1` script which:
   - Builds .NET application (self-contained, 249 files)
   - Copies all files to Package directory
+  - Copies installer sources (`installer/*.wxs`, `installer/.wix/`, `assets/app.ico`) into Package
   - Harvests files dynamically
   - Builds MSI with custom UI dialogs
 - Extracts version from WheelOverlay.csproj
@@ -87,10 +88,11 @@ This will:
 
 ### Custom UI Dialogs
 
-The installer includes custom UI dialogs defined in `Package/CustomUI.wxs`:
+The installer includes custom UI dialogs defined in `installer/CustomUI.wxs` (copied into `Package/` at build time):
 - Welcome Dialog
 - License Agreement Dialog (shows LICENSE.rtf)
 - Destination Folder Dialog (with Browse button)
+- Shortcut Options Dialog
 - Ready to Install Dialog
 - Progress Dialog
 - Complete Dialog
@@ -113,7 +115,8 @@ Update this version to trigger new releases.
 
 **Build Fails:**
 - Check WiX v4.0.4 is installed
-- Verify all source files exist in Publish directory
+- Verify all source files exist in `installer/` directory (`Package.wxs`, `CustomUI.wxs`, `.wix/wix.json`)
+- Verify `assets/app.ico` exists
 - Check CustomUI.wxs syntax
 
 **MSI Not Created:**
@@ -122,9 +125,9 @@ Update this version to trigger new releases.
 - Check for WiX compilation errors
 
 **UI Dialogs Not Showing:**
-- Verify CustomUI.wxs is included in build
+- Verify CustomUI.wxs exists in `installer/` and is copied to `Package/` during build
 - Check that both Package.wxs and CustomUI.wxs are compiled together
-- Ensure LICENSE.rtf exists in parent directory
+- Ensure LICENSE.rtf exists in the repo root (referenced as `..\LICENSE.rtf` from `Package/`)
 
 **Property Test Validation Fails:**
 - Error indicates property tests are missing preprocessor directives

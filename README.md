@@ -262,7 +262,7 @@ Contributions are welcome! See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for 
 ## Version History
 
 ### v0.5.5 (Current)
-- Standalone repository baseline (migrated from obrl monorepo)
+- Standalone repository baseline (migrated from previous monorepo)
 - CI workflows updated to .NET 10.0.x and WiX 4.0.5
 - Repository structure reorganized (scripts/, docs/)
 - CI test stability fixes for headless environments

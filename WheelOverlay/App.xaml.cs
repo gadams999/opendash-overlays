@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Forms;
 using Application = System.Windows.Application;
 using WheelOverlay.Models;
+using WheelOverlay.Services;
 
 namespace WheelOverlay
 {
@@ -23,6 +24,7 @@ namespace WheelOverlay
         private ToolStripMenuItem? _configModeMenuItem;
         private ToolStripMenuItem? _minimizeMenuItem;
         private ToolStripMenuItem? _minimizeActionMenuItem;
+        private ThemeService? _themeService;
 
         public App()
         {
@@ -79,6 +81,20 @@ namespace WheelOverlay
                 
                 // Add "Minimize" menu item (visible only when MinimizeToTaskbar setting is enabled)
                 var settings = AppSettings.Load();
+
+                // Initialize theme service with persisted preference
+                _themeService = new ThemeService(settings.ThemePreference);
+                _themeService.ApplyTheme(_themeService.IsDarkMode);
+                _themeService.StartWatching();
+                _themeService.ThemeChanged += OnThemeChanged;
+                Services.LogService.Info($"ThemeService initialized (preference={settings.ThemePreference}, dark={_themeService.IsDarkMode})");
+
+                // Set initial tray icon to match current theme
+                UpdateTrayIcon(_themeService.IsDarkMode);
+
+                // Set initial window icons to match current theme
+                UpdateWindowIcons(_themeService.IsDarkMode);
+
                 _minimizeActionMenuItem = new ToolStripMenuItem("Minimize");
                 _minimizeActionMenuItem.Click += (s, args) => MinimizeToTaskbar();
                 _minimizeActionMenuItem.Visible = settings.MinimizeToTaskbar;
@@ -148,6 +164,21 @@ namespace WheelOverlay
             }
             
             _settingsWindow = new SettingsWindow(settings);
+            // Set window icon to match current theme
+            if (_themeService != null)
+            {
+                try
+                {
+                    var iconFileName = _themeService.IsDarkMode ? "tray_icon_light.ico" : "tray_icon_dark.ico";
+                    var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, iconFileName);
+                    if (System.IO.File.Exists(iconPath))
+                        _settingsWindow.Icon = System.Windows.Media.Imaging.BitmapFrame.Create(new Uri(iconPath, UriKind.Absolute));
+                }
+                catch (Exception ex)
+                {
+                    Services.LogService.Error("Failed to set settings window icon", ex);
+                }
+            }
             _settingsWindow.SettingsChanged += (s, e) =>
             {
                 // Settings were applied, reload main window
@@ -158,6 +189,12 @@ namespace WheelOverlay
                 
                 // Update minimize menu item visibility based on MinimizeToTaskbar setting
                 UpdateMinimizeMenuItemVisibility();
+
+                // Apply theme preference change to ThemeService
+                if (_themeService != null)
+                {
+                    _themeService.Preference = settings.ThemePreference;
+                }
             };
             _settingsWindow.Closed += (s, e) => _settingsWindow = null;
             _settingsWindow.Show();
@@ -181,6 +218,22 @@ namespace WheelOverlay
             {
                 Owner = _mainWindow
             };
+            // Set window icon and about icon to match current theme
+            if (_themeService != null)
+            {
+                try
+                {
+                    var iconFileName = _themeService.IsDarkMode ? "tray_icon_light.ico" : "tray_icon_dark.ico";
+                    var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, iconFileName);
+                    if (System.IO.File.Exists(iconPath))
+                        aboutWindow.Icon = System.Windows.Media.Imaging.BitmapFrame.Create(new Uri(iconPath, UriKind.Absolute));
+                }
+                catch (Exception ex)
+                {
+                    Services.LogService.Error("Failed to set about window icon", ex);
+                }
+                aboutWindow.SetThemeService(_themeService);
+            }
             
             // Store reference to close it if needed during shutdown
             _aboutWindow = aboutWindow;
@@ -276,6 +329,83 @@ namespace WheelOverlay
             CleanupResources();
         }
 
+        private void OnThemeChanged(object? sender, bool isDarkMode)
+        {
+            Services.LogService.Info($"Theme changed: dark={isDarkMode}");
+
+            // Swap system tray icon to match the active theme
+            UpdateTrayIcon(isDarkMode);
+
+            // Swap window icons (title bar, taskbar, Alt+Tab) to match theme
+            UpdateWindowIcons(isDarkMode);
+
+            // DynamicResource bindings in open windows update automatically
+            // when ThemeService.ApplyTheme swaps the resource dictionary.
+            // Invalidate visual state on open windows to ensure any non-dynamic
+            // elements refresh immediately.
+            _settingsWindow?.InvalidateVisual();
+            _aboutWindow?.InvalidateVisual();
+        }
+
+        private void UpdateTrayIcon(bool isDarkMode)
+        {
+            if (_notifyIcon == null) return;
+
+            try
+            {
+                // Dark theme → use light icon (for visibility on dark taskbar)
+                // Light theme → use dark icon (for visibility on light taskbar)
+                var iconFileName = isDarkMode ? "tray_icon_light.ico" : "tray_icon_dark.ico";
+                var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, iconFileName);
+
+                if (System.IO.File.Exists(iconPath))
+                {
+                    var oldIcon = _notifyIcon.Icon;
+                    _notifyIcon.Icon = new System.Drawing.Icon(iconPath);
+                    oldIcon?.Dispose();
+                    Services.LogService.Info($"Tray icon updated to {iconFileName}");
+                }
+                else
+                {
+                    Services.LogService.Info($"Tray icon file not found: {iconPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Services.LogService.Error("Failed to update tray icon", ex);
+            }
+        }
+
+        private void UpdateWindowIcons(bool isDarkMode)
+        {
+            try
+            {
+                // Use the same light/dark ico files as the tray icon for window title bar,
+                // taskbar, and Alt+Tab icons. Dark theme → light icon, Light theme → dark icon.
+                var iconFileName = isDarkMode ? "tray_icon_light.ico" : "tray_icon_dark.ico";
+                var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, iconFileName);
+
+                if (!System.IO.File.Exists(iconPath))
+                {
+                    Services.LogService.Info($"Window icon file not found: {iconPath}");
+                    return;
+                }
+
+                var iconUri = new Uri(iconPath, UriKind.Absolute);
+                var bitmapFrame = System.Windows.Media.Imaging.BitmapFrame.Create(iconUri);
+
+                if (_mainWindow != null) _mainWindow.Icon = bitmapFrame;
+                if (_settingsWindow != null) _settingsWindow.Icon = bitmapFrame;
+                if (_aboutWindow != null) _aboutWindow.Icon = bitmapFrame;
+
+                Services.LogService.Info($"Window icons updated to {iconFileName}");
+            }
+            catch (Exception ex)
+            {
+                Services.LogService.Error("Failed to update window icons", ex);
+            }
+        }
+
         private void CleanupResources()
         {
             Services.LogService.Info("Cleaning up resources");
@@ -319,6 +449,22 @@ namespace WheelOverlay
                 Services.LogService.Error("Error closing main window", ex);
             }
             
+            // Dispose theme service
+            try
+            {
+                if (_themeService != null)
+                {
+                    Services.LogService.Info("Disposing ThemeService");
+                    _themeService.ThemeChanged -= OnThemeChanged;
+                    _themeService.Dispose();
+                    _themeService = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Services.LogService.Error("Error disposing ThemeService", ex);
+            }
+
             // Then cleanup notify icon
             CleanupNotifyIcon();
         }
