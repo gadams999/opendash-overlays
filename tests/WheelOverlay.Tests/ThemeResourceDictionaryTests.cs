@@ -24,10 +24,11 @@ namespace OpenDash.WheelOverlay.Tests
 
         private static ResourceDictionary LoadThemeFromFile(string themeName)
         {
-            // Walk up from the test bin directory to the repo root, then into the source.
+            // Walk up from the test bin directory to the repo root, then into OverlayCore resources.
+            // Structure: tests/WheelOverlay.Tests/bin/Debug/net10.0-windows/ -> 5 levels up = repo root
             var dir = AppContext.BaseDirectory;
-            var root = Path.GetFullPath(Path.Combine(dir, "..", "..", "..", ".."));
-            var xamlPath = Path.Combine(root, "WheelOverlay", "Resources", $"{themeName}.xaml");
+            var root = Path.GetFullPath(Path.Combine(dir, "..", "..", "..", "..", ".."));
+            var xamlPath = Path.Combine(root, "src", "OverlayCore", "Resources", $"{themeName}.xaml");
 
             if (!File.Exists(xamlPath))
                 throw new FileNotFoundException($"Theme file not found: {xamlPath}");

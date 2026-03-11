@@ -141,7 +141,7 @@ This plan restructures the WheelOverlay repository into the OpenDash-Overlays mo
     - Add WheelOverlay.Tests to the solution under the `tests` solution folder
     - _Requirements: 4.1, 4.4, 4.5, 4.6, 4.7, 8.4_
 
-- [ ] 6. Checkpoint - Verify WheelOverlay builds and all existing tests pass
+- [x] 6. Checkpoint - Verify WheelOverlay builds and all existing tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Implement GlobalHotkeyService

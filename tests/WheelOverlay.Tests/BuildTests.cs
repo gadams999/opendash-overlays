@@ -19,13 +19,14 @@ namespace OpenDash.WheelOverlay.Tests
 
         public BuildTests()
         {
-            // Navigate up from test project to solution directory
+            // Navigate up from test bin output to repo root.
+            // Structure: tests/WheelOverlay.Tests/bin/Debug/net10.0-windows/ -> 5 levels up = repo root
             _solutionDirectory = Path.GetFullPath(Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
-                "..", "..", "..", ".."
+                "..", "..", "..", "..", ".."
             ));
-            
-            _projectDirectory = Path.Combine(_solutionDirectory, "WheelOverlay");
+
+            _projectDirectory = Path.Combine(_solutionDirectory, "src", "WheelOverlay");
         }
 
         /// <summary>
@@ -137,13 +138,14 @@ namespace OpenDash.WheelOverlay.Tests
 
         public BuildIntegrityPropertyTests()
         {
-            // Navigate up from test project to solution directory
+            // Navigate up from test bin output to repo root.
+            // Structure: tests/WheelOverlay.Tests/bin/Debug/net10.0-windows/ -> 5 levels up = repo root
             _solutionDirectory = Path.GetFullPath(Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
-                "..", "..", "..", ".."
+                "..", "..", "..", "..", ".."
             ));
-            
-            _projectDirectory = Path.Combine(_solutionDirectory, "WheelOverlay");
+
+            _projectDirectory = Path.Combine(_solutionDirectory, "src", "WheelOverlay");
         }
 
         /// <summary>

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Windows;
 using OpenDash.WheelOverlay.Models;
 using OpenDash.WheelOverlay.ViewModels;
+using OpenDash.OverlayCore.Services;
 
 namespace OpenDash.WheelOverlay.Tests.Infrastructure
 {
@@ -71,6 +72,9 @@ namespace OpenDash.WheelOverlay.Tests.Infrastructure
         /// </summary>
         protected virtual void SetupTestViewModel()
         {
+            // Ensure LogService is initialized for tests that use it
+            LogService.Initialize("WheelOverlay");
+
             // Create test settings with a default profile
             TestSettings = CreateTestSettings();
 

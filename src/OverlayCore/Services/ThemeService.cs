@@ -87,12 +87,12 @@ public class ThemeService : IDisposable
     /// </summary>
     public void ApplyTheme(bool dark)
     {
+        var app = System.Windows.Application.Current;
+        if (app == null) return;
+
         var targetSource = dark
             ? new Uri("pack://application:,,,/OverlayCore;component/Resources/DarkTheme.xaml")
             : new Uri("pack://application:,,,/OverlayCore;component/Resources/LightTheme.xaml");
-
-        var app = System.Windows.Application.Current;
-        if (app == null) return;
 
         var mergedDicts = app.Resources.MergedDictionaries;
 
