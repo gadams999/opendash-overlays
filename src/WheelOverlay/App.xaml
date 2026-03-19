@@ -6,6 +6,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/OverlayCore;component/Resources/Fonts/SharedFontResources.xaml"/>
                 <ResourceDictionary Source="Resources/LightTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <cv:IsSelectedConverter x:Key="IsSelectedConverter" />

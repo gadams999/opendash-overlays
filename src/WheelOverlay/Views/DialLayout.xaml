@@ -11,7 +11,7 @@
         <TextBlock Text="&#x1F6A8; Not Found! &#x1F6A8;"
                    FontSize="{Binding Settings.FontSize}"
                    FontFamily="{Binding Settings.FontFamily}"
-                   FontWeight="Bold"
+                   FontWeight="{StaticResource OverlayFontWeightBold}"
                    TextOptions.TextRenderingMode="Aliased"
                    Foreground="Red"
                    HorizontalAlignment="Center"
