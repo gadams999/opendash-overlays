@@ -186,8 +186,8 @@ A new WheelOverlay user has installed the app but is unsure how to configure it 
 **User Documentation**
 
 - **FR-027**: Published documentation MUST exist for WheelOverlay covering getting started, usage of all layout types and profiles, tips for sim racing use, and troubleshooting common issues
-- **FR-028**: Documentation MUST be stored in the repository and suitable for publication via a static site generator
-- **FR-029**: When a new overlay application is added, its documentation MUST be added in a dedicated section following the same structure as WheelOverlay's documentation
+- **FR-028**: Documentation MUST be stored in the repository and suitable for publication via a static site generator. Minimum compatibility criteria: each file MUST include a YAML frontmatter block with at least a `title` key; body content MUST use standard Markdown without raw HTML blocks; file names MUST be lowercase with words separated by hyphens
+- **FR-029**: When a new overlay application is added with source code under `src/`, its documentation MUST be added in a dedicated section following the same structure as WheelOverlay's documentation (placeholder-only apps with no source are exempt until source is implemented)
 
 **Developer Documentation**
 
@@ -198,7 +198,7 @@ A new WheelOverlay user has installed the app but is unsure how to configure it 
 
 - **Overlay Application**: A standalone application that displays an always-on-top, click-through information overlay. Has its own version, installer, release pipeline, settings, and documentation. Depends on OverlayCore for shared behavior.
 - **Shared Infrastructure (OverlayCore)**: A library containing services shared across all overlay applications — theme detection, logging, process monitoring, window transparency management, system tray scaffolding, settings UI framework, and typography resources. Not independently versioned.
-- **Settings Category**: A named panel of related settings that an overlay application registers with the shared settings window by implementing `ISettingsCategory`. The interface exposes `string CategoryName`, `int SortOrder` (ascending; lower = higher in nav list), `FrameworkElement CreateContent()` (factory method; called by `SettingsWindow` on demand), `void LoadValues()` (called on navigation to the category), and `void SaveValues()` (called on the outgoing category on navigation and on all categories on OK/Apply). Displayed in a side navigation list sorted ascending by `SortOrder`. The About category is always present and always last (highest `SortOrder` value).
+- **Settings Category**: A named panel of related settings that an overlay application registers with `MaterialSettingsWindow` by implementing `ISettingsCategory`. Exposes the five members defined in FR-018. Displayed in a side navigation list sorted ascending by `SortOrder`; the About category is always last (highest `SortOrder` value).
 - **Overlay Mode**: The normal operating state where the overlay is always on top, click-through, and displaying its content. One of exactly two modes in the initial implementation; the cycling API is extensible for future modes.
 - **Positioning Mode**: A temporary state where the overlay is draggable by the user, with click-through disabled, allowing repositioning. Exiting this mode saves the position.
 - **Release Tag**: A namespaced git tag in the format `{app-name}/vX.Y.Z` that explicitly triggers a release pipeline for a specific overlay application.
