@@ -14,6 +14,7 @@ namespace OpenDash.WheelOverlay
     public partial class MainWindow : Window
     {
         private readonly InputService _inputService;
+        private GlobalHotkeyService? _hotkeyService;
         private bool _configMode = false;
         private OverlayViewModel _viewModel;
         private ProcessMonitor? _processMonitor;
@@ -121,14 +122,41 @@ namespace OpenDash.WheelOverlay
             }
         }
 
+        /// <summary>
+        /// Toggles between overlay (click-through) and positioning (draggable) modes.
+        /// Exiting positioning mode via this method saves the position (confirm semantics).
+        /// </summary>
+        public void ToggleOverlayMode()
+        {
+            if (_configMode)
+            {
+                // Exiting positioning mode: save position
+                ConfigMode = false;
+                ((App)System.Windows.Application.Current).ClearConfigModeCheckmark();
+            }
+            else
+            {
+                // Entering positioning mode
+                ConfigMode = true;
+                ((App)System.Windows.Application.Current).SetConfigModeCheckmark();
+            }
+        }
+
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             var settings = AppSettings.Load();
             _inputService.Start(settings.SelectedDeviceName);
-            
+
             // Set test mode indicator on ViewModel
             _viewModel.IsTestMode = _inputService.TestMode;
-            
+
+            // Register global hotkey Alt+F6 for overlay mode toggle
+            var hwnd = new WindowInteropHelper(this).Handle;
+            _hotkeyService = new GlobalHotkeyService();
+            _hotkeyService.Register(hwnd);
+            _hotkeyService.ToggleModeRequested += (_, _) => ToggleOverlayMode();
+            HwndSource.FromHwnd(hwnd)?.AddHook(WndProc);
+
             MakeWindowTransparent();
             
             // Skip process monitoring in test mode - overlay should always be visible
@@ -254,6 +282,12 @@ namespace OpenDash.WheelOverlay
 
 
 
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            _hotkeyService?.ProcessMessage(msg, wParam);
+            return IntPtr.Zero;
+        }
+
         private void MakeWindowTransparent()
         {
             if (!_configMode)
@@ -341,7 +375,11 @@ namespace OpenDash.WheelOverlay
                 
                 // Dispose process monitor
                 _processMonitor?.Dispose();
-                
+
+                // Dispose hotkey service
+                _hotkeyService?.Dispose();
+                _hotkeyService = null;
+
                 // Stop and dispose input service
                 _inputService.Stop();
                 _inputService.Dispose();

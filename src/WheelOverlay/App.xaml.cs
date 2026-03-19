@@ -109,7 +109,7 @@ namespace OpenDash.WheelOverlay
                 
                 _configModeMenuItem = new ToolStripMenuItem("Move Overlay...");
                 _configModeMenuItem.CheckOnClick = true;
-                _configModeMenuItem.Click += (s, args) => ToggleConfigMode(_configModeMenuItem.Checked);
+                _configModeMenuItem.Click += (s, args) => _mainWindow?.ToggleOverlayMode();
                 contextMenu.Items.Add(_configModeMenuItem);
                 contextMenu.Items.Add("-");
                 contextMenu.Items.Add("Settings...", null, (s, args) => OpenSettings());
@@ -280,6 +280,14 @@ namespace OpenDash.WheelOverlay
             if (_configModeMenuItem != null)
             {
                 _configModeMenuItem.Checked = false;
+            }
+        }
+
+        public void SetConfigModeCheckmark()
+        {
+            if (_configModeMenuItem != null)
+            {
+                _configModeMenuItem.Checked = true;
             }
         }
 
