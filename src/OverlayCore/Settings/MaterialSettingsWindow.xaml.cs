@@ -7,8 +7,7 @@ namespace OpenDash.OverlayCore.Settings;
 
 /// <summary>
 /// Two-column settings window with left-side navigation.
-/// Overlay apps call <see cref="RegisterCategory"/> to add panels;
-/// <see cref="AboutSettingsCategory"/> is auto-registered at SortOrder=999.
+/// Overlay apps call <see cref="RegisterCategory"/> to add panels, including their own About category.
 /// </summary>
 public partial class MaterialSettingsWindow : Window
 {
@@ -21,7 +20,6 @@ public partial class MaterialSettingsWindow : Window
     public MaterialSettingsWindow()
     {
         InitializeComponent();
-        RegisterCategory(new AboutSettingsCategory());
     }
 
     /// <summary>
@@ -111,16 +109,12 @@ public partial class MaterialSettingsWindow : Window
 
     private void SaveAll()
     {
-        // Save the current category first (its controls hold the latest values)
+        // Only save the current category — its controls hold the user's latest edits.
+        // Non-current categories are saved automatically by the navigation handler when
+        // the user switches away from them, so calling SaveValues() on them here would
+        // overwrite the current category's just-saved data with a stale settings copy.
         try { _currentCategory?.SaveValues(); }
         catch (Exception ex) { LogService.Error("Error saving current category", ex); }
-
-        // Then save all other categories (they may hold previously loaded values)
-        foreach (var cat in _categories.Where(c => !ReferenceEquals(c, _currentCategory)))
-        {
-            try { cat.SaveValues(); }
-            catch (Exception ex) { LogService.Error($"Error saving category '{cat.CategoryName}'", ex); }
-        }
 
         SettingsApplied?.Invoke(this, EventArgs.Empty);
     }

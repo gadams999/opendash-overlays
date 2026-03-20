@@ -31,7 +31,7 @@ public class SettingsCategoryPropertyTests
         foreach (var (name, order) in appCategoryDefs)
             categories.Add(new StubCategory(name, order));
 
-        // MaterialSettingsWindow auto-registers AboutSettingsCategory at 999
+        // Each overlay registers its own About category at SortOrder=999
         categories.Add(new StubCategory("About", 999));
 
         // Sort ascending by SortOrder

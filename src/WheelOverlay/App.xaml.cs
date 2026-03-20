@@ -168,6 +168,7 @@ namespace OpenDash.WheelOverlay
             _settingsWindow.RegisterCategory(new DisplaySettingsCategory(viewModel));
             _settingsWindow.RegisterCategory(new AppearanceSettingsCategory());
             _settingsWindow.RegisterCategory(new AdvancedSettingsCategory());
+            _settingsWindow.RegisterCategory(new AboutSettingsCategory(_themeService));
 
             // Set window icon to match current theme
             if (_themeService != null)
