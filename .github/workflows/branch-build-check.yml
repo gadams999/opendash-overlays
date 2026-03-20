@@ -1,6 +1,7 @@
 name: Branch Build Check
 
 on:
+  workflow_dispatch:
   push:
     branches-ignore:
       - main
