@@ -42,8 +42,6 @@ namespace OpenDash.WheelOverlay.Tests
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add("Settings...");
             contextMenu.Items.Add(new ToolStripSeparator());
-            contextMenu.Items.Add("About Wheel Overlay");
-            contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add("Exit");
 
             return contextMenu;
@@ -76,7 +74,6 @@ namespace OpenDash.WheelOverlay.Tests
             Assert.Contains("Minimize to Taskbar", menuItemTexts);
             Assert.Contains("Move Overlay...", menuItemTexts);
             Assert.Contains("Settings...", menuItemTexts);
-            Assert.Contains("About Wheel Overlay", menuItemTexts);
             Assert.Contains("Exit", menuItemTexts);
         }
 
@@ -223,73 +220,6 @@ namespace OpenDash.WheelOverlay.Tests
         }
 
         /// <summary>
-        /// Verifies that the About menu item exists and is properly configured.
-        /// Tests that the menu item is present and enabled.
-        /// 
-        /// Requirements: 3.5
-        /// </summary>
-        [Fact]
-        public void SystemTray_AboutMenuItem_ExistsAndConfigured()
-        {
-            // Arrange
-            var contextMenu = CreateMockContextMenu();
-
-            // Act
-            var aboutItem = contextMenu.Items.Cast<ToolStripItem>()
-                .FirstOrDefault(item => item.Text == "About Wheel Overlay");
-
-            // Assert
-            Assert.NotNull(aboutItem);
-            Assert.True(aboutItem.Enabled);
-            Assert.Equal("About Wheel Overlay", aboutItem.Text);
-        }
-
-        /// <summary>
-        /// Verifies that the App class has a ShowAboutDialog method.
-        /// This ensures the About menu item has proper wiring to open the about dialog.
-        /// 
-        /// Requirements: 3.5
-        /// </summary>
-        [Fact]
-        public void App_HasShowAboutDialogMethod()
-        {
-            // Arrange
-            var appType = typeof(App);
-
-            // Act
-            var showAboutMethod = appType.GetMethod("ShowAboutDialog", BindingFlags.NonPublic | BindingFlags.Instance);
-
-            // Assert
-            Assert.NotNull(showAboutMethod);
-            Assert.Equal(typeof(void), showAboutMethod.ReturnType);
-            Assert.Empty(showAboutMethod.GetParameters());
-        }
-
-        /// <summary>
-        /// Verifies that the About menu item is positioned correctly in the menu.
-        /// Tests that About is positioned above the Exit menu item.
-        /// 
-        /// Requirements: 3.5
-        /// </summary>
-        [Fact]
-        public void SystemTray_AboutMenuItem_PositionedAboveExit()
-        {
-            // Arrange
-            var contextMenu = CreateMockContextMenu();
-
-            // Act
-            var items = contextMenu.Items.Cast<ToolStripItem>().ToList();
-            var aboutIndex = items.FindIndex(item => item.Text == "About Wheel Overlay");
-            var exitIndex = items.FindIndex(item => item.Text == "Exit");
-
-            // Assert
-            Assert.True(aboutIndex >= 0, "About menu item not found");
-            Assert.True(exitIndex >= 0, "Exit menu item not found");
-            Assert.True(aboutIndex < exitIndex, 
-                $"About menu item (index {aboutIndex}) should be positioned before Exit menu item (index {exitIndex})");
-        }
-
-        /// <summary>
         /// Verifies that the Exit menu item exists and is properly configured.
         /// Tests that the menu item is present and enabled.
         /// 
@@ -371,7 +301,7 @@ namespace OpenDash.WheelOverlay.Tests
             var separatorCount = items.Count(item => item is ToolStripSeparator);
 
             // Assert
-            Assert.True(separatorCount >= 4, $"Expected at least 4 separators, found {separatorCount}");
+            Assert.True(separatorCount >= 3, $"Expected at least 3 separators, found {separatorCount}");
         }
 
         /// <summary>

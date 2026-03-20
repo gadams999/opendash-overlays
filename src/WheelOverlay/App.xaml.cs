@@ -9,8 +9,11 @@ using System.Windows.Forms;
 using Application = System.Windows.Application;
 using OpenDash.WheelOverlay.Models;
 using OpenDash.WheelOverlay.Services;
+using OpenDash.WheelOverlay.Settings;
+using OpenDash.WheelOverlay.ViewModels;
 using OpenDash.OverlayCore.Services;
 using OpenDash.OverlayCore.Models;
+using OpenDash.OverlayCore.Settings;
 
 namespace OpenDash.WheelOverlay
 {
@@ -21,8 +24,7 @@ namespace OpenDash.WheelOverlay
     {
         private NotifyIcon? _notifyIcon;
         private MainWindow? _mainWindow;
-        private AboutWindow? _aboutWindow;
-        private SettingsWindow? _settingsWindow;
+        private MaterialSettingsWindow? _settingsWindow;
         private ToolStripMenuItem? _configModeMenuItem;
         private ToolStripMenuItem? _minimizeMenuItem;
         private ToolStripMenuItem? _minimizeActionMenuItem;
@@ -114,8 +116,6 @@ namespace OpenDash.WheelOverlay
                 contextMenu.Items.Add("-");
                 contextMenu.Items.Add("Settings...", null, (s, args) => OpenSettings());
                 contextMenu.Items.Add("-");
-                contextMenu.Items.Add("About Wheel Overlay", null, (s, args) => ShowAboutDialog());
-                contextMenu.Items.Add("-");
                 contextMenu.Items.Add("Exit", null, (s, args) => ExitApplication());
 
                 _notifyIcon.ContextMenuStrip = contextMenu;
@@ -156,16 +156,19 @@ namespace OpenDash.WheelOverlay
 
         private void OpenSettings()
         {
-            var settings = AppSettings.Load();
-            
             // Reuse existing settings window if open
             if (_settingsWindow != null)
             {
                 _settingsWindow.Activate();
                 return;
             }
-            
-            _settingsWindow = new SettingsWindow(settings);
+
+            var viewModel = new SettingsViewModel();
+            _settingsWindow = new MaterialSettingsWindow();
+            _settingsWindow.RegisterCategory(new DisplaySettingsCategory(viewModel));
+            _settingsWindow.RegisterCategory(new AppearanceSettingsCategory());
+            _settingsWindow.RegisterCategory(new AdvancedSettingsCategory());
+
             // Set window icon to match current theme
             if (_themeService != null)
             {
@@ -181,22 +184,18 @@ namespace OpenDash.WheelOverlay
                     LogService.Error("Failed to set settings window icon", ex);
                 }
             }
-            _settingsWindow.SettingsChanged += (s, e) =>
+
+            _settingsWindow.SettingsApplied += (s, e) =>
             {
-                // Settings were applied, reload main window
+                var settings = AppSettings.Load();
+
                 if (_mainWindow != null)
-                {
                     _mainWindow.ApplySettings(settings);
-                }
-                
-                // Update minimize menu item visibility based on MinimizeToTaskbar setting
+
                 UpdateMinimizeMenuItemVisibility();
 
-                // Apply theme preference change to ThemeService
                 if (_themeService != null)
-                {
                     _themeService.Preference = settings.ThemePreference;
-                }
             };
             _settingsWindow.Closed += (s, e) => _settingsWindow = null;
             _settingsWindow.Show();
@@ -212,36 +211,6 @@ namespace OpenDash.WheelOverlay
                 var settings = AppSettings.Load();
                 _minimizeActionMenuItem.Visible = settings.MinimizeToTaskbar;
             }
-        }
-
-        private void ShowAboutDialog()
-        {
-            var aboutWindow = new AboutWindow
-            {
-                Owner = _mainWindow
-            };
-            // Set window icon and about icon to match current theme
-            if (_themeService != null)
-            {
-                try
-                {
-                    var iconFileName = _themeService.IsDarkMode ? "tray_icon_light.ico" : "tray_icon_dark.ico";
-                    var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, iconFileName);
-                    if (System.IO.File.Exists(iconPath))
-                        aboutWindow.Icon = System.Windows.Media.Imaging.BitmapFrame.Create(new Uri(iconPath, UriKind.Absolute));
-                }
-                catch (Exception ex)
-                {
-                    LogService.Error("Failed to set about window icon", ex);
-                }
-                aboutWindow.SetThemeService(_themeService);
-            }
-            
-            // Store reference to close it if needed during shutdown
-            _aboutWindow = aboutWindow;
-            aboutWindow.Closed += (s, e) => _aboutWindow = null;
-            
-            aboutWindow.ShowDialog();
         }
 
         private void MinimizeToTaskbar()
@@ -354,7 +323,6 @@ namespace OpenDash.WheelOverlay
             // Invalidate visual state on open windows to ensure any non-dynamic
             // elements refresh immediately.
             _settingsWindow?.InvalidateVisual();
-            _aboutWindow?.InvalidateVisual();
         }
 
         private void UpdateTrayIcon(bool isDarkMode)
@@ -406,7 +374,6 @@ namespace OpenDash.WheelOverlay
 
                 if (_mainWindow != null) _mainWindow.Icon = bitmapFrame;
                 if (_settingsWindow != null) _settingsWindow.Icon = bitmapFrame;
-                if (_aboutWindow != null) _aboutWindow.Icon = bitmapFrame;
 
                 LogService.Info($"Window icons updated to {iconFileName}");
             }
@@ -429,19 +396,12 @@ namespace OpenDash.WheelOverlay
                     _settingsWindow.Close();
                     _settingsWindow = null;
                 }
-                
-                if (_aboutWindow != null)
-                {
-                    LogService.Info("Closing About window");
-                    _aboutWindow.Close();
-                    _aboutWindow = null;
-                }
             }
             catch (Exception ex)
             {
                 LogService.Error("Error closing child windows", ex);
             }
-            
+
             // Close main window
             try
             {
@@ -492,13 +452,6 @@ namespace OpenDash.WheelOverlay
                     LogService.Info("Closing Settings window before shutdown");
                     _settingsWindow.Close();
                     _settingsWindow = null;
-                }
-                
-                if (_aboutWindow != null)
-                {
-                    LogService.Info("Closing About window before shutdown");
-                    _aboutWindow.Close();
-                    _aboutWindow = null;
                 }
             }
             catch (Exception ex)
