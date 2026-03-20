@@ -12,8 +12,10 @@
     <sys:Double x:Key="OverlayFontSizeLarge">20</sys:Double>
     <sys:Double x:Key="OverlayFontSizeXLarge">28</sys:Double>
 
-    <!-- Font Weights -->
-    <FontWeight x:Key="OverlayFontWeightNormal">Normal</FontWeight>
-    <FontWeight x:Key="OverlayFontWeightBold">Bold</FontWeight>
+    <!-- Font Weights: FontWeight structs cannot be defined as XAML resource dictionary entries
+         and reliably resolved cross-assembly via StaticResource. Consumers should use
+         FontWeight="Bold" / FontWeight="Normal" attribute syntax (TypeConverter handles it),
+         or {x:Static FontWeights.Bold} inline. -->
+    <!-- OverlayFontWeightNormal = Normal, OverlayFontWeightBold = Bold -->
 
 </ResourceDictionary>
