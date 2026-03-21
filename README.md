@@ -24,7 +24,7 @@ A monorepo of transparent overlay applications for sim racing peripherals. Each 
 | `scripts/wheel-overlay/` | WheelOverlay build and release scripts |
 | `docs/` | User and developer documentation |
 | `docs/wheel-overlay/` | WheelOverlay user documentation |
-| `assets/` | Shared icons and images |
+| `assets/wheel-overlay/` | WheelOverlay icons and source images |
 
 ## Adding a New Overlay App
 

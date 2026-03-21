@@ -22,7 +22,7 @@ installers/wheel-overlay/ — WiX 4 MSI installer
 scripts/                 — shared scripts (Validate-PropertyTests.ps1)
 scripts/wheel-overlay/   — per-app build scripts
 docs/wheel-overlay/      — user documentation
-assets/                  — shared icons and images
+assets/wheel-overlay/    — WheelOverlay icons and source images
 ```
 
 ## Commands

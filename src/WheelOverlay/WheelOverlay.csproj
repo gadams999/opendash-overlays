@@ -33,16 +33,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\assets\icons\wheel_overlay_light.ico" Link="tray_icon_light.ico">
+    <Content Include="..\..\assets\wheel-overlay\icons\wheel_overlay_light.ico" Link="tray_icon_light.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\assets\icons\wheel_overlay_dark.ico" Link="tray_icon_dark.ico">
+    <Content Include="..\..\assets\wheel-overlay\icons\wheel_overlay_dark.ico" Link="tray_icon_dark.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\assets\icons\generated\wheel_overlay_light_256x256.png" Link="about_icon_light.png">
+    <Content Include="..\..\assets\wheel-overlay\icons\generated\wheel_overlay_light_256x256.png" Link="about_icon_light.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\assets\icons\generated\wheel_overlay_dark_256x256.png" Link="about_icon_dark.png">
+    <Content Include="..\..\assets\wheel-overlay\icons\generated\wheel_overlay_dark_256x256.png" Link="about_icon_dark.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -33,7 +33,7 @@ Write-Host ""
 Write-Host "[2/4] Preparing Package directory..." -ForegroundColor Yellow
 $packageDir = ".\Package"
 $installerDir = ".\installers\wheel-overlay"
-$assetsDir = ".\assets"
+$assetsDir = ".\assets\wheel-overlay"
 
 # Ensure Package directory exists
 if (-not (Test-Path $packageDir)) {

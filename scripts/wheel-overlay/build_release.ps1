@@ -43,7 +43,7 @@ Write-Host "Preparing MSI installer build..." -ForegroundColor Cyan
 
 $packageDir = ".\Package"
 $installerDir = ".\installers\wheel-overlay"
-$assetsDir = ".\assets"
+$assetsDir = ".\assets\wheel-overlay"
 
 # Ensure Package directory exists
 if (-not (Test-Path $packageDir)) {
