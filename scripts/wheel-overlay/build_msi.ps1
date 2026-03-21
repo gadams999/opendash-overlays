@@ -74,17 +74,26 @@ foreach ($file in $files) {
 }
 $componentXml = $components -join "`n"
 
-# Update Package.wxs with generated components
+# Build a Fragment/ComponentGroup to inject (must be outside <Package> in WiX v4)
+$fragmentXml = @"
+  <Fragment>
+    <ComponentGroup Id="AppComponents" Directory="INSTALLFOLDER">
+$componentXml
+    </ComponentGroup>
+  </Fragment>
+"@
+
+# Update Package.wxs with generated ComponentGroup fragment
 $packageWxs = Get-Content "$packageDir\Package.wxs" -Raw
-$startMarker = "      <!-- APPLICATION_FILES_START -->"
-$endMarker = "      <!-- APPLICATION_FILES_END -->"
+$startMarker = "  <!-- APPLICATION_FILES_START -->"
+$endMarker = "  <!-- APPLICATION_FILES_END -->"
 $startIndex = $packageWxs.IndexOf($startMarker)
 $endIndex = $packageWxs.IndexOf($endMarker) + $endMarker.Length
 
 if ($startIndex -ge 0 -and $endIndex -gt $startIndex) {
     $beforeMarker = $packageWxs.Substring(0, $startIndex)
     $afterMarker = $packageWxs.Substring($endIndex)
-    $newContent = $beforeMarker + $startMarker + "`n" + $componentXml + "`n      " + $endMarker + $afterMarker
+    $newContent = $beforeMarker + $startMarker + "`n" + $fragmentXml + "  " + $endMarker + $afterMarker
     Set-Content "$packageDir\Package.wxs" -Value $newContent -NoNewline
     Write-Host "  Updated Package.wxs with $($files.Count) components" -ForegroundColor Gray
 } else {

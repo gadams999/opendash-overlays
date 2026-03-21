@@ -77,8 +77,9 @@
     <!-- App icon for shortcuts -->
     <Icon Id="AppIcon" SourceFile="app.ico" />
 
-    <!-- APPLICATION_FILES_START -->
-    <!-- APPLICATION_FILES_END -->
-
   </Package>
+
+  <!-- APPLICATION_FILES_START -->
+  <!-- APPLICATION_FILES_END -->
+
 </Wix>
