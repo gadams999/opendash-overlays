@@ -92,7 +92,7 @@ All NEEDS CLARIFICATION items are resolved. See `research.md` for full details.
 
 | Question | Decision |
 |---|---|
-| MDIX version | v5.1.x, pinned exact patch at implementation time |
+| MDIX version | v5.3.1 (`MaterialDesignThemes` NuGet package), pinned exact patch at implementation time |
 | Library integration | Programmatic merge via `MaterialDesignBootstrap.EnsureInitialized()` |
 | Navigation Rail in MD2 | Styled `ListBox` + `ColorZone` + `Ripple` attached behaviour |
 | Runtime theme switching | `PaletteHelper.GetTheme()` / `SetBaseTheme()` / `SetTheme()` |

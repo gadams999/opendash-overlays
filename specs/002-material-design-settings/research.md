@@ -4,9 +4,9 @@
 
 ## Decision 1 — MaterialDesignInXamlToolkit Version
 
-**Decision**: Pin `MaterialDesignThemes.Wpf` v5.1.x (exact version verified at implementation time on NuGet.org)
+**Decision**: Pin `MaterialDesignThemes` (NuGet package ID) v5.3.1 — the assembly is `MaterialDesignThemes.Wpf.dll` (exact version verified at implementation time on NuGet.org)
 
-**Rationale**: The v5.x line is the first that targets `net6.0-windows` and higher cleanly. v4.x had limited modern .NET support. As of the knowledge baseline (early 2026) v5.1.x is the stable line for .NET 10 / WPF.
+**Rationale**: The v5.x line is the first that targets `net6.0-windows` and higher cleanly. v4.x had limited modern .NET support. v5.3.1 is the latest stable release as of implementation (2026-03-21), in the v5.x family required for .NET 10 / WPF.
 
 **Alternatives considered**:
 - v4.x — dropped; incomplete .NET 10 support and older API surface

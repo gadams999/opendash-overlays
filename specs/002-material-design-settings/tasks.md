@@ -19,7 +19,7 @@
 
 **Purpose**: Pin exact MDIX package version and register it as a dependency so all subsequent phases have a stable build target.
 
-- [ ] T001 Resolve exact latest stable `MaterialDesignThemes.Wpf` v5.1.x version via `dotnet package search MaterialDesignThemes.Wpf` and add pinned `<PackageReference>` to `src/OverlayCore/OverlayCore.csproj` (no `<Version>` on the OverlayCore project itself)
+- [X] T001 Resolve exact latest stable `MaterialDesignThemes` (NuGet) version via `dotnet package search MaterialDesignThemes` — pinned at **v5.3.1** — add `<PackageReference Include="MaterialDesignThemes" Version="5.3.1" />` to `src/OverlayCore/OverlayCore.csproj` (no `<Version>` on the OverlayCore project itself)
 
 ---
 
