@@ -1,40 +1,37 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.1.0
-Version bump type: MINOR — new "Procedural References" section added; no principles changed.
+Version change: 1.1.0 → 2.0.0
+Version bump type: MAJOR — Principle VI redefined. The primary branch naming
+convention changes from `<type>/<description>` (now secondary/ad-hoc only) to
+`[overlay-name/]vN.N.N` for all spec-driven and version-targeted work.
+This is backward-incompatible: branches that followed the old primary format for
+feature work are now non-conformant.
 
 Modified principles:
-  - [PRINCIPLE_1_NAME] → I. Monorepo with Shared Core (ProjectReference)
-  - [PRINCIPLE_2_NAME] → II. Test-First with Property-Based Testing
-  - [PRINCIPLE_3_NAME] → III. Independent Per-App Versioning
-  - [PRINCIPLE_4_NAME] → IV. Changelog as Release Source of Truth
-  - [PRINCIPLE_5_NAME] → V. Observability and Error Resilience
-  - [PRINCIPLE_6_NAME] (added) → VI. Branch Naming and Conventional Commits
+  - VI. Branch Naming and Conventional Commits — core branch format redefined;
+    version-based naming is now PRIMARY for spec-driven work; type/description
+    retained as SECONDARY for non-versioned ad-hoc work only.
 
 Added sections:
-  - VI. Branch Naming and Conventional Commits (6th principle)
-  - Technology Stack (replaces [SECTION_2_NAME])
-  - Development Workflow (replaces [SECTION_3_NAME])
-  - Procedural References (new in v1.1.0 — pointers to distilled .specify/memory/ procedure files)
+  - None.
 
 Removed sections:
-  - None (all placeholders replaced)
+  - None.
 
-Templates status:
-  ✅ .specify/templates/plan-template.md — "Constitution Check" section is generic
-     and correctly defers to this file per-feature; no structural update required.
-  ✅ .specify/templates/spec-template.md — no constitution references; aligned.
-  ✅ .specify/templates/tasks-template.md — phase/category model aligns with
-     principle II (test tasks) and principle III (versioning tasks). No update required.
-  ✅ .specify/templates/agent-file-template.md — generic placeholders; no conflicts.
-  ✅ .kiro/steering/* — branch-naming, changelog, version-management, and
-     documentation-update steering docs distilled into .specify/memory/ procedure
-     files (v1.1.0). Steering docs remain as the original source; procedure memory
-     files are the speckit-native form.
+Templates updated:
+  ✅ .specify/memory/constitution.md — this file (v2.0.0).
+  ✅ .specify/memory/procedures-branching.md — updated to reflect version-based
+     primary format and spec-folder/branch tie.
+  ✅ .specify/templates/plan-template.md — Branch field updated from
+     `[###-feature-name]` to `[overlay-name/vN.N.N]` to match new convention.
+  ✅ .specify/templates/spec-template.md — Feature Branch field updated to
+     reflect that spec folder name ≠ branch name; branch is version-based.
+  ⚠ .specify/templates/tasks-template.md — Input path still uses `###-feature-name`
+     which refers to the SPEC FOLDER (unchanged); no update needed.
 
 Deferred TODOs:
-  - None. All fields resolved from .kiro steering docs, spec, design, and repo context.
+  - None. All fields resolved.
 -->
 
 # OpenDash-Overlays Constitution
@@ -157,27 +154,95 @@ Non-negotiable rules:
 Silent crashes or hangs are unacceptable; graceful degradation keeps the
 session running even if a non-critical service fails.
 
-### VI. Branch Naming and Conventional Commits
+### VI. Branch Naming, Spec Folders, and Conventional Commits
 
-All branches MUST use the format `<type>/<description>` with lowercase,
-hyphen-separated descriptions.
+Spec-driven work and version-targeted work MUST use version-based branch
+names. Spec folders use a separate sequential naming scheme. The two are
+explicitly linked in every plan document.
 
-Non-negotiable rules:
-- Valid type prefixes: `feat/`, `fix/`, `docs/`, `test/`, `refactor/`,
-  `chore/`, `perf/`. No other prefixes are permitted.
-- Descriptions MUST be lowercase with words separated by hyphens (no
-  underscores, no camelCase).
-- Version release branches MUST use `feat/v{major}.{minor}.{patch}-release`.
-- Hotfix branches targeting a specific version MUST use
-  `fix/v{version}-{description}`.
-- Commit messages SHOULD follow Conventional Commits format:
-  `<type>(<scope>): <description>`.
-- Branches MUST be created from `main`, merged back to `main` via PR, and
-  deleted after merge.
+#### Spec folder naming (speckit convention — unchanged)
 
-**Rationale**: Consistent branch naming enables CI/CD path routing, makes
-branch purpose immediately legible, and supports automated tooling that
-relies on type prefixes.
+Spec folders MUST follow the pattern `NNN-spec-description` under `specs/`:
+
+```
+specs/001-opendash-monorepo-rebrand/
+specs/002-material-design-settings/
+```
+
+- `NNN` is a zero-padded three-digit sequential number.
+- `spec-description` is lowercase, hyphen-separated.
+- The spec folder name is a permanent identifier — it does NOT change once
+  the spec is created, even after the branch is merged.
+
+#### Branch naming — PRIMARY format (spec-driven and version-targeted work)
+
+All branches that implement a spec or target a specific app version MUST use
+the format:
+
+```
+[overlay-name/]vN.N.N
+```
+
+- `overlay-name/` is the app-scoped prefix (e.g., `wheel-overlay/`). It is
+  **required** when the work is scoped to a single overlay app.
+- Omit `overlay-name/` only when the branch targets a cross-cutting monorepo
+  change that is not app-specific (e.g., `v2.0.0` for an OverlayCore-only
+  restructure).
+- `N.N.N` is the SemVer version the branch will ship as (matching the
+  `.csproj` `<Version>` bumped as the first commit on the branch).
+
+Valid examples:
+```
+wheel-overlay/v0.8.0     ← WheelOverlay feature targeting v0.8.0
+wheel-overlay/v0.7.1     ← WheelOverlay patch targeting v0.7.1
+discord-notify/v1.0.0    ← DiscordNotify initial release
+v2.0.0                   ← monorepo-wide (OverlayCore breaking change)
+```
+
+Invalid examples:
+```
+feat/animated-transitions   ✗ — use version-based name for spec work
+001-opendash-monorepo-rebrand ✗ — spec folder name is not a branch name
+wheel-overlay-v0.8.0        ✗ — missing slash separator
+```
+
+#### Branch naming — SECONDARY format (ad-hoc, non-versioned work)
+
+Small non-spec changes that do not target a new version (documentation
+corrections, dependency bumps, CI tweaks) MAY use `<type>/<description>`:
+
+- Valid type prefixes: `fix/`, `docs/`, `chore/`, `test/`, `refactor/`,
+  `perf/`. The `feat/` prefix MUST NOT be used for ad-hoc branches — all
+  feature work MUST go through a spec and use the PRIMARY format.
+- Descriptions MUST be lowercase, hyphen-separated (no underscores,
+  no camelCase).
+
+#### Linking spec folders to branches
+
+Every spec's `plan.md` MUST reference the branch in its header:
+
+```markdown
+**Branch**: `wheel-overlay/v0.8.0` | **Spec**: `specs/002-material-design-settings/`
+```
+
+This link is the authoritative connection between the spec folder (permanent
+sequential name) and the branch (version-based name). Both MUST be present in
+`plan.md` so that a reader can navigate from either direction.
+
+#### Commit messages
+
+Commits SHOULD follow Conventional Commits format:
+`<type>(<scope>): <description>`
+
+- `type`: same set as secondary branch prefixes above, plus `feat` for
+  implementation commits on a version branch.
+- `scope`: optional; identifies the affected component.
+- `description`: lowercase, imperative mood, no trailing period.
+
+**Rationale**: Version-based branch names make the target release immediately
+legible from the branch list and eliminate the disconnect between a spec's
+sequential folder name and the git workflow. The spec folder provides
+permanent traceability; the branch name provides release context.
 
 ## Technology Stack
 
@@ -200,9 +265,10 @@ monorepo baseline. Framework version changes require a constitution amendment.
 ## Development Workflow
 
 **Branch lifecycle**:
-1. Create branch from `main` using the naming convention in Principle VI.
+1. Create branch from `main` using the PRIMARY naming convention in Principle
+   VI: `[overlay-name/]vN.N.N`.
 2. Bump the app version in all required files as the first commit
-   (Principle III).
+   (Principle III). The version MUST match the branch name.
 3. Implement changes with tests (Principle II).
 4. Update CHANGELOG.md before the final commit (Principle IV).
 5. Update README.md if user-facing behavior changes.
@@ -217,6 +283,7 @@ monorepo baseline. Framework version changes require a constitution amendment.
 - Push a namespaced tag (`wheel-overlay/vX.Y.Z`) to trigger the per-app
   release workflow. The workflow validates tag-vs-.csproj version parity,
   builds the MSI, and creates a GitHub Release from CHANGELOG content.
+- The tag format matches the branch format — `overlay-name/vN.N.N`.
 
 **Adding a new overlay app**:
 - Create `src/{AppName}/`, `tests/{AppName}.Tests/`,
@@ -272,4 +339,4 @@ template's "Constitution Check" gate enforces this at spec time.
 are MAJOR. New principles or new SHOULD guidance are MINOR. Typos, examples,
 and rationale additions are PATCH.
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
+**Version**: 2.0.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-21

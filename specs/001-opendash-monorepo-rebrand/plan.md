@@ -30,13 +30,13 @@ Restructure the WheelOverlay repository into a proper multi-app monorepo (OpenDa
 | Principle | Status | Notes |
 |-----------|--------|-------|
 | **I. Monorepo with Shared Core (ProjectReference)** | ✅ PASS | OverlayCore has no `<Version>`; WheelOverlay references it via `ProjectReference`; all apps under `src/` |
-| **II. Test-First with Property-Based Testing** | ⚠️ PENDING | Properties P1–P4 implemented. P5 (mode state machine), P6 (tag round-trip), P7 (settings category sort), P8 (FontUtilities) must be written before implementation is complete — tracked in research.md Decision 6 |
+| **II. Test-First with Property-Based Testing** | ✅ PASS | Properties P1–P8 all implemented. P5 (mode state machine), P6 (tag round-trip), P7 (settings category sort), P8 (FontUtilities) completed during implementation. |
 | **III. Independent Per-App Versioning** | ✅ PASS | WheelOverlay declares `<Version>0.6.0</Version>`. Version bump is first commit on this branch per constitution. |
 | **IV. Changelog as Release Source of Truth** | ✅ PASS | `CHANGELOG.md` follows Keep a Changelog format; `[Unreleased]` section must be updated as part of this feature |
 | **V. Observability and Error Resilience** | ✅ PASS | `LogService.Initialize("WheelOverlay")` is first call in `Program.cs`; all failure modes log to `LogService.Error()` per research.md decisions 1 and 7 |
 | **VI. Branch Naming and Conventional Commits** | ⚠️ JUSTIFIED DEVIATION | Branch `001-opendash-monorepo-rebrand` uses `{issue-number}-{kebab-case-description}` format, not `<type>/<description>`. See Complexity Tracking below. |
 
-**Constitution Check result**: PASS with one justified deviation. Phase 0 research may proceed.
+**Constitution Check result**: PASS with one justified deviation (branch naming, VI). All implementation complete.
 
 ---
 
@@ -74,55 +74,55 @@ src/
 │   │   ├── DarkTheme.xaml             ✅ exists
 │   │   ├── LightTheme.xaml            ✅ exists
 │   │   └── Fonts/
-│   │       ├── SharedFontResources.xaml   ❌ to create
-│   │       └── FontUtilities.cs           ❌ to create
+│   │       ├── SharedFontResources.xaml   ✅ exists
+│   │       └── FontUtilities.cs           ✅ exists
 │   ├── Services/
 │   │   ├── LogService.cs              ✅ exists
 │   │   ├── ProcessMonitor.cs          ✅ exists
 │   │   ├── SystemTrayScaffold.cs      ✅ exists
 │   │   ├── ThemeService.cs            ✅ exists
 │   │   ├── WindowTransparencyHelper.cs ✅ exists
-│   │   └── GlobalHotkeyService.cs     ❌ to create
+│   │   └── GlobalHotkeyService.cs     ✅ exists
 │   ├── Settings/
-│   │   ├── ISettingsCategory.cs       ❌ to create
-│   │   ├── AboutSettingsCategory.cs   ❌ to create
-│   │   ├── MaterialSettingsWindow.xaml ❌ to create
-│   │   ├── MaterialSettingsWindow.xaml.cs ❌ to create
+│   │   ├── ISettingsCategory.cs       ✅ exists
+│   │   ├── AboutSettingsCategory.cs   ✅ exists
+│   │   ├── MaterialSettingsWindow.xaml ✅ exists
+│   │   ├── MaterialSettingsWindow.xaml.cs ✅ exists
 │   │   └── Styles/
-│   │       └── MaterialStyles.xaml    ❌ to create
-│   └── Placeholder.cs                 ❌ to remove (once real code present)
+│   │       └── MaterialStyles.xaml    ✅ exists
+│   └── Placeholder.cs                 ✅ removed
 │
 └── WheelOverlay/                — overlay app (v0.6.0 → will be bumped)
-    ├── App.xaml / App.xaml.cs         ✅ exists — add SharedFontResources merge
+    ├── App.xaml / App.xaml.cs         ✅ exists — SharedFontResources merged
     ├── Program.cs                     ✅ exists
-    ├── MainWindow.xaml / .cs          ✅ exists — wire GlobalHotkeyService + ConfigModeBehavior
-    ├── SettingsWindow.xaml / .cs      ✅ exists — replace with MaterialSettingsWindow
-    ├── AboutWindow.xaml / .cs         ✅ exists — remove (replaced by AboutSettingsCategory)
+    ├── MainWindow.xaml / .cs          ✅ exists — GlobalHotkeyService + ConfigModeBehavior wired
+    ├── SettingsWindow.xaml / .cs      ✅ removed — replaced by MaterialSettingsWindow
+    ├── AboutWindow.xaml / .cs         ✅ removed — replaced by AboutSettingsCategory
     ├── Models/                        ✅ all exist, no changes
     ├── Services/InputService.cs       ✅ exists, no changes
     ├── ViewModels/                    ✅ exist
     ├── Views/                         ✅ all 5 layouts exist
     └── Settings/
-        ├── DisplaySettingsCategory.cs     ❌ to create (migrated from SettingsWindow)
-        ├── AppearanceSettingsCategory.cs  ❌ to create (migrated from SettingsWindow)
-        └── AdvancedSettingsCategory.cs    ❌ to create (migrated from SettingsWindow)
+        ├── DisplaySettingsCategory.cs     ✅ exists
+        ├── AppearanceSettingsCategory.cs  ✅ exists
+        └── AdvancedSettingsCategory.cs    ✅ exists
 
 tests/
 ├── OverlayCore.Tests/
 │   ├── LogServicePropertyTests.cs     ✅ exists (P2)
 │   ├── ProcessMonitorPropertyTests.cs ✅ exists (P3)
 │   ├── ThemeServicePropertyTests.cs   ✅ exists (P1)
-│   ├── PlaceholderTests.cs            ❌ to remove
-│   ├── OverlayModePropertyTests.cs    ❌ to create (P5)
-│   ├── TagFormatPropertyTests.cs      ❌ to create (P6)
-│   ├── SettingsCategoryPropertyTests.cs ❌ to create (P7)
-│   └── FontUtilitiesPropertyTests.cs  ❌ to create (P8)
+│   ├── PlaceholderTests.cs            ✅ removed
+│   ├── OverlayModePropertyTests.cs    ✅ exists (P5)
+│   ├── TagFormatPropertyTests.cs      ✅ exists (P6)
+│   ├── SettingsCategoryPropertyTests.cs ✅ exists (P7)
+│   └── FontUtilitiesPropertyTests.cs  ✅ exists (P8)
 └── WheelOverlay.Tests/                ✅ 65+ tests, all must continue to pass
 
 installers/
 └── wheel-overlay/
-    ├── Package.wxs                    ❌ to create (WiX 4 installer source)
-    └── CustomUI.wxs                   ❌ to create (WiX custom UI)
+    ├── Package.wxs                    ✅ exists
+    └── CustomUI.wxs                   ✅ exists
 
 scripts/
 ├── Validate-PropertyTests.ps1         ✅ exists — update to accept -TestProjectPath param
@@ -134,22 +134,22 @@ scripts/
 
 docs/
 └── wheel-overlay/
-    ├── getting-started.md             ❌ to create
-    ├── usage-guide.md                 ❌ to create
-    ├── tips.md                        ❌ to create
-    └── troubleshooting.md             ❌ to create
+    ├── getting-started.md             ✅ exists
+    ├── usage-guide.md                 ✅ exists
+    ├── tips.md                        ✅ exists
+    └── troubleshooting.md             ✅ exists
 
 .github/workflows/
-├── branch-build-check.yml            ✅ exists — add path filters, update csproj paths
-├── pre-merge-validation.yml          ✅ exists — verify/update paths
-├── wheel-overlay-release.yml         ❌ to create (replaces release.yml)
-├── discord-notify-release.yml        ❌ to create (placeholder per spec clarification)
-└── release.yml                       ❌ to delete (superseded by wheel-overlay-release.yml)
+├── branch-build-check.yml            ✅ exists — path filters added, csproj paths updated
+├── pre-merge-validation.yml          ✅ exists
+├── wheel-overlay-release.yml         ✅ exists
+├── discord-notify-release.yml        ✅ exists
+└── release.yml                       ✅ deleted
 
 assets/                               ✅ complete — shared icons
-README.md                             ✅ exists — update monorepo structure section
-CHANGELOG.md                          ✅ exists — add [Unreleased] entries for this feature
-CONTRIBUTING.md                       ❌ to create (documents branch naming, versioning, release tags)
+README.md                             ✅ exists — monorepo structure section updated
+CHANGELOG.md                          ✅ exists — [Unreleased] entries added
+CONTRIBUTING.md                       ✅ exists
 ```
 
 **Structure Decision**: Option 1 (single solution, monorepo layout). The layout is already established by completed migration checkpoints. OverlayCore is the shared library under `src/OverlayCore/`; each overlay app lives under `src/{AppName}/`. Tests, installers, scripts, and docs mirror the `src/` app name.
