@@ -10,6 +10,7 @@ using OpenDash.DiscordChatOverlay.Settings;
 using OpenDash.DiscordChatOverlay.ViewModels;
 using OpenDash.OverlayCore.Services;
 using OpenDash.OverlayCore.Settings;
+using WinForms = System.Windows.Forms;
 
 namespace OpenDash.DiscordChatOverlay;
 
@@ -30,6 +31,11 @@ public partial class App : Application
     private MaterialSettingsWindow? _settingsWindow;
     private CancellationTokenSource _appCts = new();
     private int                     _retryAttempt;
+
+    private WinForms.NotifyIcon?    _notifyIcon;
+    private System.Drawing.Icon?    _iconDefault;
+    private System.Drawing.Icon?    _iconAmber;
+    private System.Drawing.Icon?    _iconRed;
 
     public App()
     {
@@ -80,7 +86,8 @@ public partial class App : Application
         {
             new ConnectionSettingsCategory(_ipcClient, _tokenStorage),
             new DisplaySettingsCategory(_settings),
-            new AppearanceSettingsCategory(_settings, _mainWindow, _themeService)
+            new AppearanceSettingsCategory(_settings, _mainWindow, _themeService),
+            new AboutSettingsCategory()
         });
 
         // Hide/show overlay based on channel membership
@@ -98,6 +105,8 @@ public partial class App : Application
         _ipcClient.ConnectionDropped += OnConnectionDropped;
         _ipcClient.AuthRevoked       += OnAuthRevoked;
 
+        SetupTrayIcon();
+
         _ = ConnectAsync(_appCts.Token);
 
         LogService.Info("DiscordChatOverlay startup complete.");
@@ -110,6 +119,16 @@ public partial class App : Application
         _themeService?.Dispose();
         _voiceService?.Dispose();
         _ = _ipcClient?.DisposeAsync();
+
+        if (_notifyIcon != null)
+        {
+            _notifyIcon.Visible = false;
+            _notifyIcon.Dispose();
+        }
+        _iconAmber?.Dispose();
+        _iconRed?.Dispose();
+        _iconDefault?.Dispose();
+
         LogService.Info("DiscordChatOverlay exiting.");
         base.OnExit(e);
     }
@@ -245,6 +264,111 @@ public partial class App : Application
             {
                 LogService.Error($"App: Reconnect attempt {_retryAttempt} failed.", ex);
             }
+        }
+    }
+
+    // ── System tray ────────────────────────────────────────────────────────
+
+    private void SetupTrayIcon()
+    {
+        try
+        {
+            var resourceInfo = GetResourceStream(new Uri("pack://application:,,,/app.ico"));
+            _iconDefault = resourceInfo?.Stream != null
+                ? new System.Drawing.Icon(resourceInfo.Stream)
+                : System.Drawing.SystemIcons.Application;
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("App: Failed to load tray icon from resources.", ex);
+            _iconDefault = System.Drawing.SystemIcons.Application;
+        }
+
+        _iconAmber = CreateDotIcon(_iconDefault, System.Drawing.Color.FromArgb(255, 176, 0));
+        _iconRed   = CreateDotIcon(_iconDefault, System.Drawing.Color.FromArgb(220, 50,  47));
+
+        var menu         = new WinForms.ContextMenuStrip();
+        var showItem     = new WinForms.ToolStripMenuItem("Show Overlay");
+        var hideItem     = new WinForms.ToolStripMenuItem("Hide Overlay");
+        var settingsItem = new WinForms.ToolStripMenuItem("Settings");
+        var exitItem     = new WinForms.ToolStripMenuItem("Exit");
+
+        showItem.Click     += (_, _) => { _mainWindow?.Show(); _mainWindow?.Activate(); };
+        hideItem.Click     += (_, _) => _mainWindow?.Hide();
+        settingsItem.Click += (_, _) => ShowSettings();
+        exitItem.Click     += (_, _) =>
+        {
+            if (_notifyIcon != null) { _notifyIcon.Visible = false; _notifyIcon.Dispose(); _notifyIcon = null; }
+            Current.Shutdown();
+        };
+
+        menu.Items.Add(showItem);
+        menu.Items.Add(hideItem);
+        menu.Items.Add(settingsItem);
+        menu.Items.Add(new WinForms.ToolStripSeparator());
+        menu.Items.Add(exitItem);
+
+        _notifyIcon = new WinForms.NotifyIcon
+        {
+            Icon             = _iconDefault,
+            ContextMenuStrip = menu,
+            Text             = "Discord Chat Overlay",
+            Visible          = true
+        };
+
+        _notifyIcon.DoubleClick += (_, _) =>
+        {
+            if (_mainWindow?.IsVisible == true)
+                _mainWindow.Hide();
+            else
+            {
+                _mainWindow?.Show();
+                _mainWindow?.Activate();
+            }
+        };
+
+        // Drive tray icon color from OverlayViewModel.ConnectionIndicator
+        if (_overlayViewModel != null)
+        {
+            _overlayViewModel.PropertyChanged += (_, pe) =>
+            {
+                if (pe.PropertyName == nameof(OverlayViewModel.ConnectionIndicator))
+                    UpdateTrayIcon(_overlayViewModel.ConnectionIndicator);
+            };
+        }
+    }
+
+    private void UpdateTrayIcon(string? connectionIndicator)
+    {
+        if (_notifyIcon == null) return;
+
+        _notifyIcon.Icon = connectionIndicator switch
+        {
+            { } s when s.Contains("Reconnecting") => _iconAmber ?? _iconDefault,
+            { } s when s.Contains("Disconnected") => _iconRed   ?? _iconDefault,
+            _                                      => _iconDefault
+        };
+    }
+
+    private static System.Drawing.Icon? CreateDotIcon(System.Drawing.Icon baseIcon, System.Drawing.Color dotColor)
+    {
+        try
+        {
+            using var bmp = new System.Drawing.Bitmap(16, 16, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (var g = System.Drawing.Graphics.FromImage(bmp))
+            {
+                g.DrawIcon(baseIcon, new System.Drawing.Rectangle(0, 0, 16, 16));
+                using var brush = new System.Drawing.SolidBrush(dotColor);
+                g.FillEllipse(brush, 10, 10, 5, 5);
+            }
+            var hIcon = bmp.GetHicon();
+            var icon  = System.Drawing.Icon.FromHandle(hIcon);
+            return (System.Drawing.Icon)icon.Clone(); // clone so we own the handle's copy
+        }
+        catch (Exception ex)
+        {
+            LogService.Error($"App: Could not create indicator icon — {ex.Message}");
+            return null;
         }
     }
 
