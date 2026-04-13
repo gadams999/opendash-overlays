@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 
 namespace OpenDash.DiscordChatOverlay.Models;
@@ -5,14 +6,43 @@ namespace OpenDash.DiscordChatOverlay.Models;
 public class ActiveSpeaker : INotifyPropertyChanged
 {
     public string UserId { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
+
+    private string _displayName = string.Empty;
+    public string DisplayName
+    {
+        get => _displayName;
+        set
+        {
+            if (_displayName != value)
+            {
+                _displayName = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+            }
+        }
+    }
+
     public string? AvatarHash { get; set; }
     public string? GuildAvatarHash { get; set; }
     public string? GuildId { get; set; }
     public bool AvatarVisible { get; set; } = true;
-    public SpeakerState State { get; set; } = SpeakerState.Silent;
 
-    private double _opacity = 1.0;
+    public DateTimeOffset LastActivatedUtc { get; set; } = DateTimeOffset.MinValue;
+
+    private SpeakerState _state = SpeakerState.Silent;
+    public SpeakerState State
+    {
+        get => _state;
+        set
+        {
+            if (_state != value)
+            {
+                _state = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(State)));
+            }
+        }
+    }
+
+    private double _opacity = 0.0;
     public double Opacity
     {
         get => _opacity;

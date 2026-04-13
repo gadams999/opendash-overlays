@@ -5,6 +5,7 @@ using System.Windows;
 using Application = System.Windows.Application;
 using OpenDash.DiscordChatOverlay.Models;
 using OpenDash.DiscordChatOverlay.Services;
+using OpenDash.DiscordChatOverlay.ViewModels;
 using OpenDash.OverlayCore.Services;
 using OpenDash.OverlayCore.Settings;
 
@@ -19,6 +20,10 @@ public partial class App : Application
     private AppSettings?            _settings;
     private TokenStorageService?    _tokenStorage;
     private DiscordIpcClient?       _ipcClient;
+    private AliasService?           _aliasService;
+    private VoiceSessionService?    _voiceService;
+    private OverlayViewModel?       _overlayViewModel;
+    private MainWindow?             _mainWindow;
     private CancellationTokenSource _appCts = new();
     private int                     _retryAttempt;
 
@@ -48,6 +53,36 @@ public partial class App : Application
         _tokenStorage = new TokenStorageService();
         _ipcClient    = new DiscordIpcClient();
 
+        _aliasService = new AliasService();
+        _aliasService.Load();
+
+        _voiceService     = new VoiceSessionService(_ipcClient, _aliasService, _settings);
+        _overlayViewModel = new OverlayViewModel(_voiceService, _settings);
+
+        _mainWindow = new MainWindow(_overlayViewModel)
+        {
+            Left = _settings.WindowLeft,
+            Top  = _settings.WindowTop
+        };
+
+        // Apply saved opacity (AppSettings.Opacity is 10–100; WPF Opacity is 0.0–1.0)
+        _mainWindow.Opacity = _settings.Opacity / 100.0;
+
+        if (_settings.ShowOnStartup)
+            _mainWindow.Show();
+
+        // Hide/show overlay based on channel membership
+        _overlayViewModel.PropertyChanged += (_, pe) =>
+        {
+            if (pe.PropertyName == nameof(OverlayViewModel.IsInChannel))
+            {
+                if (_overlayViewModel.IsInChannel)
+                    _mainWindow.Show();
+                else
+                    _mainWindow.Hide();
+            }
+        };
+
         _ipcClient.ConnectionDropped += OnConnectionDropped;
         _ipcClient.AuthRevoked       += OnAuthRevoked;
 
@@ -60,6 +95,7 @@ public partial class App : Application
     {
         _appCts.Cancel();
         _themeService?.Dispose();
+        _voiceService?.Dispose();
         _ = _ipcClient?.DisposeAsync();
         LogService.Info("DiscordChatOverlay exiting.");
         base.OnExit(e);
@@ -83,10 +119,10 @@ public partial class App : Application
             {
                 // First run — full PKCE authorization flow
                 LogService.Info("App: No token found; starting authorization flow.");
-                var verifier   = _tokenStorage.GeneratePkceVerifier();
-                var challenge  = _tokenStorage.GeneratePkceChallenge(verifier);
-                var code       = await _ipcClient.SendAuthorize(challenge, ct);
-                bundle         = await _tokenStorage.ExchangeCode(code, verifier, GetClientId());
+                var verifier  = _tokenStorage.GeneratePkceVerifier();
+                var challenge = _tokenStorage.GeneratePkceChallenge(verifier);
+                var code      = await _ipcClient.SendAuthorize(challenge, ct);
+                bundle        = await _tokenStorage.ExchangeCode(code, verifier, GetClientId());
                 _tokenStorage.WriteToken(bundle);
             }
             else if (_tokenStorage.IsTokenExpiredOrExpiringSoon(bundle))
@@ -99,20 +135,13 @@ public partial class App : Application
             await _ipcClient.SendAuthenticate(bundle.AccessToken, ct);
 
             // Subscribe global events
-            await _ipcClient.Subscribe("VOICE_CHANNEL_SELECT", null, ct);
+            await _ipcClient.Subscribe("VOICE_CHANNEL_SELECT",    null, ct);
             await _ipcClient.Subscribe("VOICE_CONNECTION_STATUS", null, ct);
 
+            _voiceService!.SetConnected();
+
             // Seed initial channel state
-            var channelData = await _ipcClient.GetSelectedVoiceChannel(ct);
-            if (channelData.HasValue)
-            {
-                var chName = channelData.Value.TryGetProperty("name", out var n) ? n.GetString() : "?";
-                LogService.Info($"App: Currently in channel '{chName}'");
-            }
-            else
-            {
-                LogService.Info("App: Not currently in a voice channel.");
-            }
+            await _voiceService.SeedInitialChannelAsync(ct);
 
             _retryAttempt = 0;
             LogService.Info("App: Discord connection established.");
