@@ -54,4 +54,30 @@ public partial class MainWindow : Window
         if (_hwnd == IntPtr.Zero) return;
         ApplyClickThrough();
     }
+
+    /// <summary>
+    /// Shows the drag handle bar and suspends click-through so the overlay can be repositioned.
+    /// Called when the Settings window opens.
+    /// </summary>
+    public void EnableDragMode()
+    {
+        Show();
+        SuspendClickThrough();
+        DragHandleBorder.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>
+    /// Hides the drag handle bar and restores click-through.
+    /// Called when the Settings window closes.
+    /// </summary>
+    public void DisableDragMode()
+    {
+        DragHandleBorder.Visibility = Visibility.Collapsed;
+        RestoreClickThrough();
+    }
+
+    private void DragHandle_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        DragMove();
+    }
 }

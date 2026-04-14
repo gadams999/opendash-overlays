@@ -156,12 +156,20 @@ public partial class App : Application
                 _settingsWindow.RegisterCategory(cat);
         }
 
-        _mainWindow?.SuspendClickThrough();
+        _mainWindow?.EnableDragMode();
 
         _settingsWindow.Closed += (_, _) =>
         {
             _settingsWindow = null;
-            _mainWindow?.RestoreClickThrough();
+            _mainWindow?.DisableDragMode();
+
+            // Persist any position change made by dragging
+            if (_mainWindow != null && _settings != null)
+            {
+                _settings.WindowLeft = _mainWindow.Left;
+                _settings.WindowTop  = _mainWindow.Top;
+                _settings.Save();
+            }
         };
 
         _settingsWindow.Show();

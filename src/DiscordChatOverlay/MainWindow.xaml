@@ -15,10 +15,33 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- Drag handle — only visible when Settings window is open -->
+        <Border x:Name="DragHandleBorder"
+                Grid.Row="0"
+                Background="#CC1A1A2E"
+                CornerRadius="4,4,0,0"
+                Padding="8,5,8,5"
+                Cursor="SizeAll"
+                Visibility="Collapsed"
+                MouseLeftButtonDown="DragHandle_MouseLeftButtonDown">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="✥"
+                           Foreground="#AAAACC"
+                           FontSize="13"
+                           VerticalAlignment="Center"
+                           Margin="0,0,6,0"/>
+                <TextBlock Text="Drag to reposition overlay"
+                           Foreground="#AAAACC"
+                           FontSize="11"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
         <!-- Connection indicator (hidden when null) -->
-        <TextBlock Grid.Row="0"
+        <TextBlock Grid.Row="1"
                    Text="{Binding ConnectionIndicator}"
                    Foreground="#FFCC00"
                    FontSize="12"
@@ -36,7 +59,7 @@
         </TextBlock>
 
         <!-- Speaker list -->
-        <ItemsControl Grid.Row="1"
+        <ItemsControl Grid.Row="2"
                       ItemsSource="{Binding ActiveSpeakers}"
                       Margin="4,0,4,0">
             <ItemsControl.ItemTemplate>
@@ -81,7 +104,7 @@
         </ItemsControl>
 
         <!-- +N more overflow label -->
-        <TextBlock Grid.Row="2"
+        <TextBlock Grid.Row="3"
                    Foreground="#AAAAAA"
                    FontSize="12"
                    Margin="8,2,8,4"
