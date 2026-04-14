@@ -32,13 +32,7 @@ public class DisplaySettingsCategory : ISettingsCategory
 
         // ── Display mode ───────────────────────────────────────────────────
 
-        panel.Children.Add(new TextBlock
-        {
-            Text       = "Display mode",
-            FontSize   = 14,
-            FontWeight = FontWeights.SemiBold,
-            Margin     = new Thickness(0, 0, 0, 8)
-        });
+        panel.Children.Add(MakeSectionHeader("Display mode"));
 
         _speakersOnlyRadio = new RadioButton
         {
@@ -61,33 +55,13 @@ public class DisplaySettingsCategory : ISettingsCategory
         // ── Grace period (fade duration) ───────────────────────────────────
 
         var graceRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        graceRow.Children.Add(new TextBlock
-        {
-            Text     = "Fade duration (seconds)",
-            FontSize = 14,
-            Width    = 200,
-            VerticalAlignment = VerticalAlignment.Center
-        });
-        _graceValueLabel = new TextBlock
-        {
-            Text     = _settings.GracePeriodSeconds.ToString("F1"),
-            FontSize = 14,
-            Width    = 40,
-            VerticalAlignment = VerticalAlignment.Center
-        };
+        graceRow.Children.Add(MakeLabel("Fade duration (seconds)", width: 200));
+        _graceValueLabel = MakeValueLabel(_settings.GracePeriodSeconds.ToString("F1"), width: 40);
         graceRow.Children.Add(_graceValueLabel);
         panel.Children.Add(graceRow);
 
-        _graceSlider = new Slider
-        {
-            Minimum      = 0.0,
-            Maximum      = 2.0,
-            Value        = _settings.GracePeriodSeconds,
-            TickFrequency= 0.1,
-            SmallChange  = 0.1,
-            LargeChange  = 0.5,
-            Margin       = new Thickness(0, 0, 0, 16)
-        };
+        _graceSlider = MakeSlider(minimum: 0.0, maximum: 2.0, value: _settings.GracePeriodSeconds, tickFrequency: 0.1);
+        _graceSlider.Margin = new Thickness(0, 0, 0, 16);
         _graceSlider.ValueChanged += (_, e) =>
         {
             if (_graceValueLabel != null)
@@ -98,33 +72,13 @@ public class DisplaySettingsCategory : ISettingsCategory
         // ── Debounce threshold (noise gate) ────────────────────────────────
 
         var debounceRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        debounceRow.Children.Add(new TextBlock
-        {
-            Text     = "Noise gate (ms, 0 = disabled)",
-            FontSize = 14,
-            Width    = 200,
-            VerticalAlignment = VerticalAlignment.Center
-        });
-        _debounceValueLabel = new TextBlock
-        {
-            Text     = _settings.DebounceThresholdMs.ToString(),
-            FontSize = 14,
-            Width    = 40,
-            VerticalAlignment = VerticalAlignment.Center
-        };
+        debounceRow.Children.Add(MakeLabel("Noise gate (ms, 0 = disabled)", width: 200));
+        _debounceValueLabel = MakeValueLabel(_settings.DebounceThresholdMs.ToString(), width: 40);
         debounceRow.Children.Add(_debounceValueLabel);
         panel.Children.Add(debounceRow);
 
-        _debounceSlider = new Slider
-        {
-            Minimum      = 0,
-            Maximum      = 1000,
-            Value        = _settings.DebounceThresholdMs,
-            TickFrequency= 50,
-            SmallChange  = 10,
-            LargeChange  = 100,
-            Margin       = new Thickness(0, 0, 0, 8)
-        };
+        _debounceSlider = MakeSlider(minimum: 0, maximum: 1000, value: _settings.DebounceThresholdMs, tickFrequency: 50);
+        _debounceSlider.Margin = new Thickness(0, 0, 0, 8);
         _debounceSlider.ValueChanged += (_, e) =>
         {
             if (_debounceValueLabel != null)
@@ -171,5 +125,62 @@ public class DisplaySettingsCategory : ISettingsCategory
             if (_debounceValueLabel != null)
                 _debounceValueLabel.Text = _settings.DebounceThresholdMs.ToString();
         }
+    }
+
+    // ── Style helpers ──────────────────────────────────────────────────────
+
+    private static Slider MakeSlider(double minimum, double maximum, double value, double tickFrequency)
+    {
+        var slider = new Slider
+        {
+            Minimum             = minimum,
+            Maximum             = maximum,
+            Value               = value,
+            TickFrequency       = tickFrequency,
+            IsSnapToTickEnabled = true,
+            SmallChange         = tickFrequency,
+            LargeChange         = tickFrequency * 5
+        };
+        slider.Style = (Style)System.Windows.Application.Current.FindResource("MaterialDesignSlider");
+        return slider;
+    }
+
+    private static TextBlock MakeSectionHeader(string text)
+    {
+        var tb = new TextBlock
+        {
+            Text       = text,
+            FontSize   = 14,
+            FontWeight = FontWeights.SemiBold,
+            Margin     = new Thickness(0, 0, 0, 8)
+        };
+        tb.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+        return tb;
+    }
+
+    private static TextBlock MakeLabel(string text, double width = 0)
+    {
+        var tb = new TextBlock
+        {
+            Text              = text,
+            FontSize          = 14,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        if (width > 0) tb.Width = width;
+        tb.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+        return tb;
+    }
+
+    private static TextBlock MakeValueLabel(string text, double width = 0)
+    {
+        var tb = new TextBlock
+        {
+            Text              = text,
+            FontSize          = 14,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        if (width > 0) tb.Width = width;
+        tb.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+        return tb;
     }
 }

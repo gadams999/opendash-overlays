@@ -18,6 +18,8 @@ namespace OpenDash.DiscordChatOverlay.Settings;
 /// <summary>
 /// Appearance category: overlay position, opacity, color theme, font family, font size, and font color.
 /// All changes apply live; values are persisted on Save.
+/// Controls use the same MD2 style variants as WheelOverlay (MaterialDesignComboBox,
+/// MaterialDesignSlider, MaterialDesignTextBox, MaterialDesignOutlinedButton).
 /// </summary>
 public class AppearanceSettingsCategory : ISettingsCategory
 {
@@ -55,13 +57,7 @@ public class AppearanceSettingsCategory : ISettingsCategory
 
         var posRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 16) };
 
-        posRow.Children.Add(new TextBlock
-        {
-            Text              = "Left:",
-            FontSize          = 14,
-            Width             = 36,
-            VerticalAlignment = VerticalAlignment.Center
-        });
+        posRow.Children.Add(MakeLabel("Left:", width: 36));
 
         _leftTextBox = new TextBox
         {
@@ -69,23 +65,19 @@ public class AppearanceSettingsCategory : ISettingsCategory
             Width  = 70,
             Margin = new Thickness(0, 0, 16, 0)
         };
+        ApplyTextBoxStyle(_leftTextBox, "Left");
         _leftTextBox.GotFocus  += (_, _) => _mainWindow.SuspendClickThrough();
         _leftTextBox.LostFocus += OnPositionLostFocus;
         posRow.Children.Add(_leftTextBox);
 
-        posRow.Children.Add(new TextBlock
-        {
-            Text              = "Top:",
-            FontSize          = 14,
-            Width             = 36,
-            VerticalAlignment = VerticalAlignment.Center
-        });
+        posRow.Children.Add(MakeLabel("Top:", width: 36));
 
         _topTextBox = new TextBox
         {
             Text  = _settings.WindowTop.ToString("F0"),
             Width = 70
         };
+        ApplyTextBoxStyle(_topTextBox, "Top");
         _topTextBox.GotFocus  += (_, _) => _mainWindow.SuspendClickThrough();
         _topTextBox.LostFocus += OnPositionLostFocus;
         posRow.Children.Add(_topTextBox);
@@ -97,26 +89,12 @@ public class AppearanceSettingsCategory : ISettingsCategory
         panel.Children.Add(MakeSectionHeader("Opacity (%)"));
 
         var opacityRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        _opacityLabel = new TextBlock
-        {
-            Text              = _settings.Opacity.ToString(),
-            FontSize          = 14,
-            Width             = 36,
-            VerticalAlignment = VerticalAlignment.Center
-        };
+        _opacityLabel = MakeValueLabel(_settings.Opacity.ToString(), width: 36);
         opacityRow.Children.Add(_opacityLabel);
         panel.Children.Add(opacityRow);
 
-        _opacitySlider = new Slider
-        {
-            Minimum       = 10,
-            Maximum       = 100,
-            Value         = _settings.Opacity,
-            TickFrequency = 5,
-            SmallChange   = 1,
-            LargeChange   = 10,
-            Margin        = new Thickness(0, 0, 0, 16)
-        };
+        _opacitySlider = MakeSlider(minimum: 10, maximum: 100, value: _settings.Opacity, tickFrequency: 5);
+        _opacitySlider.Margin = new Thickness(0, 0, 0, 16);
         _opacitySlider.ValueChanged += (_, e) =>
         {
             int pct = (int)e.NewValue;
@@ -129,7 +107,8 @@ public class AppearanceSettingsCategory : ISettingsCategory
 
         panel.Children.Add(MakeSectionHeader("Color theme"));
 
-        _themeComboBox = new ComboBox { Width = 160, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 16) };
+        _themeComboBox = new ComboBox { Width = 200, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 16) };
+        ApplyComboBoxStyle(_themeComboBox, hint: "Theme");
         _themeComboBox.Items.Add(new ComboBoxItem { Content = "System default", Tag = ThemePreference.System });
         _themeComboBox.Items.Add(new ComboBoxItem { Content = "Light",          Tag = ThemePreference.Light  });
         _themeComboBox.Items.Add(new ComboBoxItem { Content = "Dark",           Tag = ThemePreference.Dark   });
@@ -148,26 +127,12 @@ public class AppearanceSettingsCategory : ISettingsCategory
         panel.Children.Add(MakeSectionHeader("Font size (pt)"));
 
         var fontRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        _fontSizeLabel = new TextBlock
-        {
-            Text              = _settings.FontSize.ToString(),
-            FontSize          = 14,
-            Width             = 36,
-            VerticalAlignment = VerticalAlignment.Center
-        };
+        _fontSizeLabel = MakeValueLabel(_settings.FontSize.ToString(), width: 36);
         fontRow.Children.Add(_fontSizeLabel);
         panel.Children.Add(fontRow);
 
-        _fontSizeSlider = new Slider
-        {
-            Minimum       = 8,
-            Maximum       = 32,
-            Value         = _settings.FontSize,
-            TickFrequency = 1,
-            SmallChange   = 1,
-            LargeChange   = 4,
-            Margin        = new Thickness(0, 0, 0, 16)
-        };
+        _fontSizeSlider = MakeSlider(minimum: 8, maximum: 32, value: _settings.FontSize, tickFrequency: 1);
+        _fontSizeSlider.Margin = new Thickness(0, 0, 0, 16);
         _fontSizeSlider.ValueChanged += (_, e) =>
         {
             int pt = (int)e.NewValue;
@@ -268,11 +233,12 @@ public class AppearanceSettingsCategory : ISettingsCategory
             _fontColorTextBox.Text = _settings.FontColor;
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────
+    // ── Control builders ───────────────────────────────────────────────────
 
     private ComboBox BuildFontFamilyCombo()
     {
-        var combo = new ComboBox { Width = 180, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 16) };
+        var combo = new ComboBox { Width = 220, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 16) };
+        ApplyComboBoxStyle(combo, hint: "Font Family");
 
         foreach (var font in FontUtilities.CuratedFonts)
         {
@@ -300,18 +266,11 @@ public class AppearanceSettingsCategory : ISettingsCategory
     private TextBox BuildColorPicker(StackPanel parent)
     {
         var row     = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 16) };
-        var textBox = new TextBox
-        {
-            Width             = 90,
-            Margin            = new Thickness(0, 0, 8, 0),
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        var pickBtn = new Button
-        {
-            Content           = "Pick",
-            MinWidth          = 55,
-            VerticalAlignment = VerticalAlignment.Center
-        };
+        var textBox = new TextBox { Width = 100, VerticalAlignment = VerticalAlignment.Center };
+        ApplyTextBoxStyle(textBox, hint: "#RRGGBB");
+
+        var pickBtn = new Button { Content = "Pick", MinWidth = 60, Margin = new Thickness(10, 0, 0, 0) };
+        pickBtn.Style = (Style)System.Windows.Application.Current.FindResource("MaterialDesignOutlinedButton");
 
         pickBtn.Click += (_, _) =>
         {
@@ -342,6 +301,80 @@ public class AppearanceSettingsCategory : ISettingsCategory
         catch { /* ignore invalid hex strings */ }
     }
 
+    // ── Style helpers (mirrors WheelOverlay pattern) ───────────────────────
+
+    private static void ApplyComboBoxStyle(ComboBox combo, string hint)
+    {
+        combo.SetResourceReference(ComboBox.ForegroundProperty, "ThemeForeground");
+        MaterialDesignThemes.Wpf.HintAssist.SetHint(combo, hint);
+        combo.Style = (Style)System.Windows.Application.Current.FindResource("MaterialDesignComboBox");
+    }
+
+    private static void ApplyTextBoxStyle(TextBox textBox, string hint)
+    {
+        textBox.SetResourceReference(TextBox.ForegroundProperty, "ThemeForeground");
+        MaterialDesignThemes.Wpf.HintAssist.SetHint(textBox, hint);
+        MaterialDesignThemes.Wpf.HintAssist.SetIsFloating(textBox, true);
+        textBox.Style = (Style)System.Windows.Application.Current.FindResource("MaterialDesignFloatingHintTextBox");
+    }
+
+    private static Slider MakeSlider(double minimum, double maximum, double value, double tickFrequency)
+    {
+        var slider = new Slider
+        {
+            Minimum          = minimum,
+            Maximum          = maximum,
+            Value            = value,
+            TickFrequency    = tickFrequency,
+            IsSnapToTickEnabled = true,
+            SmallChange      = tickFrequency,
+            LargeChange      = tickFrequency * 5
+        };
+        slider.Style = (Style)System.Windows.Application.Current.FindResource("MaterialDesignSlider");
+        return slider;
+    }
+
+    private static TextBlock MakeSectionHeader(string text)
+    {
+        var tb = new TextBlock
+        {
+            Text       = text,
+            FontSize   = 14,
+            FontWeight = FontWeights.SemiBold,
+            Margin     = new Thickness(0, 0, 0, 6)
+        };
+        tb.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+        return tb;
+    }
+
+    private static TextBlock MakeLabel(string text, double width = 0)
+    {
+        var tb = new TextBlock
+        {
+            Text              = text,
+            FontSize          = 14,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        if (width > 0) tb.Width = width;
+        tb.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+        return tb;
+    }
+
+    private static TextBlock MakeValueLabel(string text, double width = 0)
+    {
+        var tb = new TextBlock
+        {
+            Text              = text,
+            FontSize          = 14,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        if (width > 0) tb.Width = width;
+        tb.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
+        return tb;
+    }
+
+    // ── Event handlers ─────────────────────────────────────────────────────
+
     private void OnMainWindowLocationChanged(object? sender, EventArgs e)
     {
         if (_leftTextBox != null) _leftTextBox.Text = _mainWindow.Left.ToString("F0");
@@ -361,16 +394,6 @@ public class AppearanceSettingsCategory : ISettingsCategory
     private void OnThemeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_themeComboBox?.SelectedItem is ComboBoxItem item && item.Tag is ThemePreference pref)
-        {
             _themeService.Preference = pref;
-        }
     }
-
-    private static TextBlock MakeSectionHeader(string text) => new()
-    {
-        Text       = text,
-        FontSize   = 14,
-        FontWeight = FontWeights.SemiBold,
-        Margin     = new Thickness(0, 0, 0, 6)
-    };
 }

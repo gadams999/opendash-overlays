@@ -31,18 +31,21 @@ public class ConnectionSettingsCategory : ISettingsCategory
 
         _statusText = new TextBlock
         {
-            Text       = GetStatusText(),
-            Margin     = new Thickness(0, 0, 0, 16),
-            FontSize   = 14,
+            Text         = GetStatusText(),
+            Margin       = new Thickness(0, 0, 0, 16),
+            FontSize     = 14,
             TextWrapping = TextWrapping.Wrap
         };
+        _statusText.SetResourceReference(TextBlock.ForegroundProperty, "ThemeForeground");
         panel.Children.Add(_statusText);
 
         var reAuthButton = new Button { Content = "Re-authorize", Margin = new Thickness(0, 0, 0, 8) };
+        reAuthButton.Style = (Style)System.Windows.Application.Current.FindResource("MaterialDesignRaisedButton");
         reAuthButton.Click += OnReAuthorize;
         panel.Children.Add(reAuthButton);
 
         var disconnectButton = new Button { Content = "Disconnect / Forget Token" };
+        disconnectButton.Style = (Style)System.Windows.Application.Current.FindResource("MaterialDesignOutlinedButton");
         disconnectButton.Click += OnDisconnect;
         panel.Children.Add(disconnectButton);
 
