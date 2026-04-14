@@ -19,6 +19,11 @@ nav:
     - Installation: wheel-overlay/installation.md
     - Configuration: wheel-overlay/configuration.md
     - Troubleshooting: wheel-overlay/troubleshooting.md
+  - Discord Chat Overlay:
+    - Overview: discord-chat-overlay/index.md
+    - Getting Started: discord-chat-overlay/getting-started.md
+    - Settings: discord-chat-overlay/settings.md
+    - Troubleshooting: discord-chat-overlay/troubleshooting.md
   - Common Setup: common-setup/index.md
   - Contribute: contribute/index.md
 
