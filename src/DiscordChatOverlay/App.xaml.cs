@@ -79,8 +79,9 @@ public partial class App : Application
         // Apply saved opacity (AppSettings.Opacity is 10–100; WPF Opacity is 0.0–1.0)
         _mainWindow.Opacity = _settings.Opacity / 100.0;
 
-        // Apply saved font family
+        // Apply saved font family and size
         _mainWindow.FontFamily = FontUtilities.GetFontFamily(_settings.FontFamily);
+        _mainWindow.FontSize   = _settings.FontSize;
 
         // Apply saved font color
         try
