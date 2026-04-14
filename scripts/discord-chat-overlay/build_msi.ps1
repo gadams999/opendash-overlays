@@ -35,10 +35,11 @@ $packageDir = ".\Package"
 $installerDir = ".\installers\discord-chat-overlay"
 $assetsDir = ".\assets\discord-chat-overlay"
 
-# Ensure Package directory exists
-if (-not (Test-Path $packageDir)) {
-    New-Item -ItemType Directory -Path $packageDir | Out-Null
+# Always clean Package/ first to avoid stale artifacts from other overlay builds
+if (Test-Path $packageDir) {
+    Remove-Item $packageDir -Recurse -Force
 }
+New-Item -ItemType Directory -Path $packageDir | Out-Null
 
 # Copy ALL published files (self-contained includes .NET runtime)
 Write-Host "  Copying all published files..." -ForegroundColor Gray
