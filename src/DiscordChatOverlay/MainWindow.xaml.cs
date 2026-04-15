@@ -8,15 +8,17 @@ namespace OpenDash.DiscordChatOverlay;
 
 public partial class MainWindow : Window
 {
-    private const int GWL_EXSTYLE     = -20;
+    private const int GWL_EXSTYLE      = -20;
     private const int WS_EX_TRANSPARENT = 0x00000020;
     private const int WS_EX_LAYERED    = 0x00080000;
 
-    [DllImport("user32.dll")]
-    private static extern int GetWindowLong(IntPtr hwnd, int index);
+    // Use the Ptr variants — on a 64-bit process SetWindowLong (32-bit) can corrupt
+    // WPF's internal WndProc chain which also uses SetWindowLongPtr (GWLP_WNDPROC).
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern nint GetWindowLongPtr(IntPtr hwnd, int index);
 
-    [DllImport("user32.dll")]
-    private static extern int SetWindowLong(IntPtr hwnd, int index, int newStyle);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern nint SetWindowLongPtr(IntPtr hwnd, int index, nint newStyle);
 
     private IntPtr _hwnd;
 
@@ -36,16 +38,16 @@ public partial class MainWindow : Window
 
     private void ApplyClickThrough()
     {
-        int style = GetWindowLong(_hwnd, GWL_EXSTYLE);
-        SetWindowLong(_hwnd, GWL_EXSTYLE, style | WS_EX_TRANSPARENT | WS_EX_LAYERED);
+        nint style = GetWindowLongPtr(_hwnd, GWL_EXSTYLE);
+        SetWindowLongPtr(_hwnd, GWL_EXSTYLE, style | WS_EX_TRANSPARENT | WS_EX_LAYERED);
     }
 
     /// <summary>Suspends click-through so the user can interact with the window (e.g. drag to reposition).</summary>
     public void SuspendClickThrough()
     {
         if (_hwnd == IntPtr.Zero) return;
-        int style = GetWindowLong(_hwnd, GWL_EXSTYLE);
-        SetWindowLong(_hwnd, GWL_EXSTYLE, style & ~WS_EX_TRANSPARENT);
+        nint style = GetWindowLongPtr(_hwnd, GWL_EXSTYLE);
+        SetWindowLongPtr(_hwnd, GWL_EXSTYLE, style & ~WS_EX_TRANSPARENT);
     }
 
     /// <summary>Restores click-through after a drag or interaction is complete.</summary>
