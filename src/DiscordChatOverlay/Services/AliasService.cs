@@ -21,6 +21,7 @@ public class AliasService
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     private readonly string _aliasesPath;
+    private readonly object _lock = new();
     private List<ChannelContext> _contexts = new();
 
     /// <summary>Creates an AliasService using the default %APPDATA% path.</summary>
@@ -38,48 +39,63 @@ public class AliasService
     /// </summary>
     public void Load()
     {
-        _contexts = new List<ChannelContext>();
-
-        if (!File.Exists(_aliasesPath))
-            return;
-
-        try
+        lock (_lock)
         {
-            var json = File.ReadAllText(_aliasesPath);
-            var raw = JsonSerializer.Deserialize<List<ChannelContext>>(json, JsonOptions);
-            if (raw == null) return;
+            _contexts = new List<ChannelContext>();
 
-            foreach (var ctx in raw)
+            if (!File.Exists(_aliasesPath))
+                return;
+
+            try
             {
-                if (!IsValidSnowflake(ctx.GuildId) || !IsValidSnowflake(ctx.ChannelId))
-                {
-                    LogService.Error(
-                        $"AliasService.Load: Skipping ChannelContext with invalid GuildId='{ctx.GuildId}' or ChannelId='{ctx.ChannelId}'.");
-                    continue;
-                }
+                var json = File.ReadAllText(_aliasesPath);
+                var raw = JsonSerializer.Deserialize<List<ChannelContext>>(json, JsonOptions);
+                if (raw == null) return;
 
-                var validMembers = new List<ChannelMember>();
-                foreach (var member in ctx.Members ?? new List<ChannelMember>())
+                foreach (var ctx in raw)
                 {
-                    if (!IsValidSnowflake(member.UserId) ||
-                        (string.IsNullOrEmpty(member.LastKnownName) && member.CustomDisplayName == null))
+                    if (!IsValidSnowflake(ctx.GuildId) || !IsValidSnowflake(ctx.ChannelId))
                     {
                         LogService.Error(
-                            $"AliasService.Load: Skipping ChannelMember with UserId='{member.UserId}' in context {ctx.GuildId}/{ctx.ChannelId}.");
+                            $"AliasService.Load: Skipping ChannelContext with invalid GuildId='{ctx.GuildId}' or ChannelId='{ctx.ChannelId}'.");
                         continue;
                     }
-                    validMembers.Add(member);
-                }
 
-                ctx.Members = validMembers;
-                _contexts.Add(ctx);
+                    var validMembers = new List<ChannelMember>();
+                    foreach (var member in ctx.Members ?? new List<ChannelMember>())
+                    {
+                        if (!IsValidSnowflake(member.UserId) ||
+                            (string.IsNullOrEmpty(member.LastKnownName) && member.CustomDisplayName == null))
+                        {
+                            LogService.Error(
+                                $"AliasService.Load: Skipping ChannelMember with UserId='{member.UserId}' in context {ctx.GuildId}/{ctx.ChannelId}.");
+                            continue;
+                        }
+                        validMembers.Add(member);
+                    }
+
+                    ctx.Members = validMembers;
+                    _contexts.Add(ctx);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Error("AliasService.Load: Failed to parse aliases.json; starting with empty alias list.", ex);
+                _contexts = new List<ChannelContext>();
             }
         }
-        catch (Exception ex)
-        {
-            LogService.Error("AliasService.Load: Failed to parse aliases.json; starting with empty alias list.", ex);
-            _contexts = new List<ChannelContext>();
-        }
+    }
+
+    /// <summary>Saves aliases.json atomically via temp-file rename. Caller must hold <see cref="_lock"/>.</summary>
+    private void SaveLocked()
+    {
+        var dir = Path.GetDirectoryName(_aliasesPath)!;
+        Directory.CreateDirectory(dir);
+
+        var tmp = _aliasesPath + ".tmp";
+        var json = JsonSerializer.Serialize(_contexts, JsonOptions);
+        File.WriteAllText(tmp, json);
+        File.Move(tmp, _aliasesPath, overwrite: true);
     }
 
     /// <summary>Saves aliases.json atomically via temp-file rename.</summary>
@@ -87,13 +103,7 @@ public class AliasService
     {
         try
         {
-            var dir = Path.GetDirectoryName(_aliasesPath)!;
-            Directory.CreateDirectory(dir);
-
-            var tmp = _aliasesPath + ".tmp";
-            var json = JsonSerializer.Serialize(_contexts, JsonOptions);
-            File.WriteAllText(tmp, json);
-            File.Move(tmp, _aliasesPath, overwrite: true);
+            lock (_lock) SaveLocked();
         }
         catch (Exception ex)
         {
@@ -104,16 +114,25 @@ public class AliasService
     /// <summary>Creates or updates a ChannelContext entry and saves.</summary>
     public void UpsertChannelContext(string guildId, string guildName, string channelId, string channelName)
     {
-        var ctx = _contexts.FirstOrDefault(c => c.GuildId == guildId && c.ChannelId == channelId);
-        if (ctx == null)
+        try
         {
-            ctx = new ChannelContext { GuildId = guildId, ChannelId = channelId };
-            _contexts.Add(ctx);
+            lock (_lock)
+            {
+                var ctx = _contexts.FirstOrDefault(c => c.GuildId == guildId && c.ChannelId == channelId);
+                if (ctx == null)
+                {
+                    ctx = new ChannelContext { GuildId = guildId, ChannelId = channelId };
+                    _contexts.Add(ctx);
+                }
+                ctx.GuildName = guildName;
+                ctx.ChannelName = channelName;
+                SaveLocked();
+            }
         }
-
-        ctx.GuildName = guildName;
-        ctx.ChannelName = channelName;
-        Save();
+        catch (Exception ex)
+        {
+            LogService.Error("AliasService.Save: Failed to write aliases.json.", ex);
+        }
     }
 
     /// <summary>
@@ -122,31 +141,51 @@ public class AliasService
     /// </summary>
     public void UpsertChannelMember(string guildId, string channelId, string userId, string discordDisplayName)
     {
-        var ctx = _contexts.FirstOrDefault(c => c.GuildId == guildId && c.ChannelId == channelId);
-        if (ctx == null)
+        try
         {
-            ctx = new ChannelContext { GuildId = guildId, ChannelId = channelId };
-            _contexts.Add(ctx);
-        }
+            lock (_lock)
+            {
+                var ctx = _contexts.FirstOrDefault(c => c.GuildId == guildId && c.ChannelId == channelId);
+                if (ctx == null)
+                {
+                    ctx = new ChannelContext { GuildId = guildId, ChannelId = channelId };
+                    _contexts.Add(ctx);
+                }
 
-        var member = ctx.Members.FirstOrDefault(m => m.UserId == userId);
-        if (member == null)
+                var member = ctx.Members.FirstOrDefault(m => m.UserId == userId);
+                if (member == null)
+                {
+                    member = new ChannelMember { UserId = userId };
+                    ctx.Members.Add(member);
+                }
+
+                if (member.LastKnownName != discordDisplayName)
+                    member.LastKnownName = discordDisplayName;
+
+                SaveLocked();
+            }
+        }
+        catch (Exception ex)
         {
-            member = new ChannelMember { UserId = userId };
-            ctx.Members.Add(member);
+            LogService.Error("AliasService.Save: Failed to write aliases.json.", ex);
         }
-
-        if (member.LastKnownName != discordDisplayName)
-            member.LastKnownName = discordDisplayName;
-
-        Save();
     }
 
     /// <summary>Removes the context and all its members. Saves after removal.</summary>
     public void DeleteChannelContext(string guildId, string channelId)
     {
-        _contexts.RemoveAll(c => c.GuildId == guildId && c.ChannelId == channelId);
-        Save();
+        try
+        {
+            lock (_lock)
+            {
+                _contexts.RemoveAll(c => c.GuildId == guildId && c.ChannelId == channelId);
+                SaveLocked();
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("AliasService.Save: Failed to write aliases.json.", ex);
+        }
     }
 
     /// <summary>
@@ -155,20 +194,30 @@ public class AliasService
     /// </summary>
     public string Resolve(string userId, string guildId, string channelId, string rawDiscordName = "")
     {
-        var ctx = _contexts.FirstOrDefault(c => c.GuildId == guildId && c.ChannelId == channelId);
-        var member = ctx?.Members.FirstOrDefault(m => m.UserId == userId);
+        lock (_lock)
+        {
+            var ctx = _contexts.FirstOrDefault(c => c.GuildId == guildId && c.ChannelId == channelId);
+            var member = ctx?.Members.FirstOrDefault(m => m.UserId == userId);
 
-        return member?.CustomDisplayName
-            ?? (string.IsNullOrEmpty(member?.LastKnownName) ? null : member.LastKnownName)
-            ?? rawDiscordName;
+            return member?.CustomDisplayName
+                ?? (string.IsNullOrEmpty(member?.LastKnownName) ? null : member.LastKnownName)
+                ?? rawDiscordName;
+        }
     }
 
     /// <summary>Returns the ChannelContext for the given guild+channel, or null if not found.</summary>
-    public ChannelContext? GetContext(string guildId, string channelId) =>
-        _contexts.FirstOrDefault(c => c.GuildId == guildId && c.ChannelId == channelId);
+    public ChannelContext? GetContext(string guildId, string channelId)
+    {
+        lock (_lock)
+            return _contexts.FirstOrDefault(c => c.GuildId == guildId && c.ChannelId == channelId);
+    }
 
-    /// <summary>Returns all loaded ChannelContext records.</summary>
-    public IReadOnlyList<ChannelContext> GetAllContexts() => _contexts.AsReadOnly();
+    /// <summary>Returns all loaded ChannelContext records (snapshot copy).</summary>
+    public IReadOnlyList<ChannelContext> GetAllContexts()
+    {
+        lock (_lock)
+            return _contexts.ToList().AsReadOnly();
+    }
 
     // --- helpers ---
 
