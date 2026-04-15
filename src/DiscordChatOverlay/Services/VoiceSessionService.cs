@@ -79,25 +79,27 @@ public class VoiceSessionService : INotifyPropertyChanged, IDisposable
             if (!channelData.HasValue) return;
 
             var data      = channelData.Value;
-            var channelId = data.TryGetProperty("id",       out var idEl) ? idEl.GetString() : null;
+            var channelId = data.TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
             if (channelId == null) return;
 
             var guildId     = data.TryGetProperty("guild_id", out var gEl) && gEl.ValueKind != JsonValueKind.Null
                               ? gEl.GetString() : null;
             var channelName = data.TryGetProperty("name", out var nEl) ? nEl.GetString() : null;
+            var guildName   = ExtractGuildName(data);
 
             lock (_lock)
             {
                 Session.ChannelId   = channelId;
                 Session.GuildId     = guildId;
+                Session.GuildName   = guildName;
                 Session.ChannelName = channelName;
             }
 
             LogService.Info(
                 $"VoiceSessionService: already in voice channel at startup — " +
-                $"guild={guildId ?? "?"} channel=\"{channelName ?? channelId}\" ({channelId})");
+                FormatGuildChannel(guildId, guildName, channelId, channelName));
 
-            await SeedChannelAsync(channelId, guildId, channelName, data, ct);
+            await SeedChannelAsync(channelId, guildId, guildName, channelName, data, ct);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -137,18 +139,15 @@ public class VoiceSessionService : INotifyPropertyChanged, IDisposable
     // ── Internal seeding ───────────────────────────────────────────────────
 
     private async Task SeedChannelAsync(
-        string channelId, string? guildId, string? channelName,
+        string channelId, string? guildId, string? guildName, string? channelName,
         JsonElement channelData, CancellationToken ct)
     {
         if (guildId != null)
-        {
-            _alias.UpsertChannelContext(guildId, guildId, channelId, channelName ?? "?");
-            LogService.Info($"VoiceSessionService: seeding channel — guild={guildId} channel=\"{channelName ?? channelId}\" ({channelId})");
-        }
-        else
-        {
-            LogService.Info($"VoiceSessionService: seeding channel — channel=\"{channelName ?? channelId}\" ({channelId}) [no guild]");
-        }
+            _alias.UpsertChannelContext(guildId, guildName ?? guildId, channelId, channelName ?? channelId);
+
+        LogService.Info(
+            $"VoiceSessionService: seeding channel — " +
+            FormatGuildChannel(guildId, guildName, channelId, channelName));
 
         // Subscribe channel-scoped events
         try
@@ -288,23 +287,22 @@ public class VoiceSessionService : INotifyPropertyChanged, IDisposable
     private void OnVoiceChannelSelected(object? sender, ChannelSelectEventArgs e)
     {
         // Capture old channel for leave-log before overwriting session
-        string? oldChannelId, oldChannelName, oldGuildId;
+        string? oldChannelId, oldChannelName, oldGuildId, oldGuildName;
         lock (_lock)
         {
             oldChannelId   = Session.ChannelId;
             oldChannelName = Session.ChannelName;
             oldGuildId     = Session.GuildId;
+            oldGuildName   = Session.GuildName;
         }
 
         if (oldChannelId != null && e.ChannelId != oldChannelId)
-        {
             LogService.Info(
                 $"VoiceSessionService: left voice channel — " +
-                $"guild={oldGuildId ?? "?"} channel=\"{oldChannelName ?? oldChannelId}\" ({oldChannelId})");
-        }
+                FormatGuildChannel(oldGuildId, oldGuildName, oldChannelId, oldChannelName));
 
         // Update session state BEFORE clearing so ViewModel sees the new ChannelId
-        lock (_lock) { Session.ChannelId = e.ChannelId; Session.GuildId = e.GuildId; }
+        lock (_lock) { Session.ChannelId = e.ChannelId; Session.GuildId = e.GuildId; Session.GuildName = null; }
 
         ClearAllParticipants();
 
@@ -316,7 +314,7 @@ public class VoiceSessionService : INotifyPropertyChanged, IDisposable
 
         LogService.Info(
             $"VoiceSessionService: joining voice channel — " +
-            $"guild={e.GuildId ?? "?"} channelId={e.ChannelId} (name will follow)");
+            FormatGuildChannel(e.GuildId, guildName: null, e.ChannelId, channelName: null));
 
         _ = Task.Run(async () =>
         {
@@ -324,18 +322,18 @@ public class VoiceSessionService : INotifyPropertyChanged, IDisposable
             {
                 var ct          = _cts.Token;
                 var channelData = await _ipc.GetSelectedVoiceChannel(ct);
-                var channelName = channelData.HasValue && channelData.Value.TryGetProperty("name", out var nEl)
-                                  ? nEl.GetString() : null;
+                if (!channelData.HasValue) return;
 
-                lock (_lock) { Session.ChannelName = channelName; }
+                var channelName = channelData.Value.TryGetProperty("name", out var nEl) ? nEl.GetString() : null;
+                var guildName   = ExtractGuildName(channelData.Value);
 
-                if (channelName != null)
-                    LogService.Info(
-                        $"VoiceSessionService: joined voice channel — " +
-                        $"guild={e.GuildId ?? "?"} channel=\"{channelName}\" ({e.ChannelId})");
+                lock (_lock) { Session.ChannelName = channelName; Session.GuildName = guildName; }
 
-                if (channelData.HasValue)
-                    await SeedChannelAsync(e.ChannelId, e.GuildId, channelName, channelData.Value, ct);
+                LogService.Info(
+                    $"VoiceSessionService: joined voice channel — " +
+                    FormatGuildChannel(e.GuildId, guildName, e.ChannelId, channelName));
+
+                await SeedChannelAsync(e.ChannelId, e.GuildId, guildName, channelName, channelData.Value, ct);
             }
             catch (OperationCanceledException) { }
             catch (Exception ex)
@@ -347,14 +345,14 @@ public class VoiceSessionService : INotifyPropertyChanged, IDisposable
 
     private void OnConnectionDropped(object? sender, EventArgs e)
     {
-        lock (_lock) { Session.ChannelId = null; Session.GuildId = null; }
+        lock (_lock) { Session.ChannelId = null; Session.GuildId = null; Session.GuildName = null; }
         ClearAllParticipants();
         ConnectionState = ConnectionState.Retrying;
     }
 
     private void OnAuthRevoked(object? sender, EventArgs e)
     {
-        lock (_lock) { Session.ChannelId = null; Session.GuildId = null; }
+        lock (_lock) { Session.ChannelId = null; Session.GuildId = null; Session.GuildName = null; }
         ClearAllParticipants();
         ConnectionState = ConnectionState.Failed;
     }
@@ -434,6 +432,32 @@ public class VoiceSessionService : INotifyPropertyChanged, IDisposable
             IsMuted            = isMuted,
             IsDeafened         = isDeafened
         };
+    }
+
+    /// <summary>
+    /// Tries to extract the guild name from a channel response object.
+    /// Discord IPC returns a <c>guild</c> sub-object with <c>id</c> and <c>name</c>.
+    /// </summary>
+    private static string? ExtractGuildName(JsonElement channelData)
+    {
+        if (channelData.TryGetProperty("guild", out var guildEl)
+            && guildEl.ValueKind == JsonValueKind.Object
+            && guildEl.TryGetProperty("name", out var nameEl)
+            && nameEl.ValueKind != JsonValueKind.Null)
+            return nameEl.GetString();
+        return null;
+    }
+
+    /// <summary>
+    /// Formats a guild+channel pair as <c>guild="name" (id) channel="name" (id)</c>.
+    /// Falls back gracefully when names or IDs are unavailable.
+    /// </summary>
+    private static string FormatGuildChannel(
+        string? guildId, string? guildName, string? channelId, string? channelName)
+    {
+        var guild   = guildId   != null ? $"guild=\"{guildName ?? "?"}\" ({guildId})" : "guild=none";
+        var channel = channelId != null ? $"channel=\"{channelName ?? "?"}\" ({channelId})" : "channel=none";
+        return $"{guild} {channel}";
     }
 
     // ── IDisposable ────────────────────────────────────────────────────────
