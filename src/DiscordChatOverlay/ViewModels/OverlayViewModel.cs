@@ -42,6 +42,20 @@ public class OverlayViewModel : INotifyPropertyChanged
         private set { if (_isInChannel != value) { _isInChannel = value; OnPropertyChanged(); } }
     }
 
+    private bool _isAuthRequired;
+    public bool IsAuthRequired
+    {
+        get => _isAuthRequired;
+        private set { if (_isAuthRequired != value) { _isAuthRequired = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>Fired when the user clicks the auth-required banner on the overlay.</summary>
+    public event EventHandler? ReAuthorizationRequested;
+
+    /// <summary>Called by the overlay UI button — raises <see cref="ReAuthorizationRequested"/>.</summary>
+    public void RequestReAuthorization() =>
+        ReAuthorizationRequested?.Invoke(this, EventArgs.Empty);
+
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -83,13 +97,15 @@ public class OverlayViewModel : INotifyPropertyChanged
     {
         if (e.PropertyName == nameof(VoiceSessionService.ConnectionState))
         {
-            ConnectionIndicator = _voiceService.ConnectionState switch
+            var state = _voiceService.ConnectionState;
+            ConnectionIndicator = state switch
             {
                 ConnectionState.Retrying => "⟳ Reconnecting…",
-                ConnectionState.Failed   => "✕ Disconnected",
+                ConnectionState.Failed   => null,   // auth banner replaces generic indicator
                 _                        => null
             };
-            IsInChannel = _voiceService.Session.ChannelId != null;
+            IsAuthRequired = state == ConnectionState.Failed;
+            IsInChannel    = _voiceService.Session.ChannelId != null;
         }
     }
 

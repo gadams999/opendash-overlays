@@ -107,17 +107,20 @@ public partial class App : Application
             new AboutSettingsCategory()
         });
 
-        // Hide/show overlay based on channel membership
+        // Hide/show overlay based on channel membership or auth-required state
         _overlayViewModel.PropertyChanged += (_, pe) =>
         {
-            if (pe.PropertyName == nameof(OverlayViewModel.IsInChannel))
+            if (pe.PropertyName == nameof(OverlayViewModel.IsInChannel) ||
+                pe.PropertyName == nameof(OverlayViewModel.IsAuthRequired))
             {
-                if (_overlayViewModel.IsInChannel)
+                if (_overlayViewModel.IsInChannel || _overlayViewModel.IsAuthRequired)
                     _mainWindow.Show();
                 else
                     _mainWindow.Hide();
             }
         };
+
+        _overlayViewModel.ReAuthorizationRequested += OnReAuthorizationRequested;
 
         _ipcClient.ConnectionDropped += OnConnectionDropped;
         _ipcClient.AuthRevoked       += OnAuthRevoked;
@@ -271,8 +274,15 @@ public partial class App : Application
 
     private void OnAuthRevoked(object? sender, EventArgs e)
     {
-        LogService.Info("App: Auth revoked; reconnect loop stopped.");
-        // Connection state = Failed — user must re-authorize via settings window
+        LogService.Info("App: Auth revoked; waiting for user to re-authorize via overlay banner.");
+        // Connection state = Failed — overlay banner prompts the user; no automatic retry
+    }
+
+    private void OnReAuthorizationRequested(object? sender, EventArgs e)
+    {
+        LogService.Info("App: Re-authorization requested by user — deleting token and reconnecting.");
+        _tokenStorage?.DeleteToken();
+        _ = ReconnectLoopAsync(_appCts.Token);
     }
 
     private async Task ReconnectLoopAsync(CancellationToken ct)
@@ -370,13 +380,25 @@ public partial class App : Application
             }
         };
 
-        // Drive tray icon color from OverlayViewModel.ConnectionIndicator
+        // Drive tray icon color from connection state
         if (_overlayViewModel != null)
         {
             _overlayViewModel.PropertyChanged += (_, pe) =>
             {
                 if (pe.PropertyName == nameof(OverlayViewModel.ConnectionIndicator))
                     UpdateTrayIcon(_overlayViewModel.ConnectionIndicator);
+                else if (pe.PropertyName == nameof(OverlayViewModel.IsAuthRequired))
+                {
+                    // Auth-required uses a red icon; clearing it falls back to ConnectionIndicator
+                    if (_overlayViewModel.IsAuthRequired)
+                    {
+                        if (_notifyIcon != null) _notifyIcon.Icon = _iconRed ?? _iconDefault;
+                    }
+                    else
+                    {
+                        UpdateTrayIcon(_overlayViewModel.ConnectionIndicator);
+                    }
+                }
             };
         }
     }

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -21,20 +22,42 @@ public partial class MainWindow : Window
     private static extern nint SetWindowLongPtr(IntPtr hwnd, int index, nint newStyle);
 
     private IntPtr _hwnd;
+    private OverlayViewModel _viewModel = null!;
 
     public MainWindow(OverlayViewModel viewModel)
     {
         InitializeComponent();
-        DataContext = viewModel;
+        DataContext    = viewModel;
+        _viewModel     = viewModel;
 
         SourceInitialized += OnSourceInitialized;
+        viewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
         _hwnd = new WindowInteropHelper(this).Handle;
-        ApplyClickThrough();
+
+        // Apply initial state — auth banner may already be required
+        if (_viewModel.IsAuthRequired)
+            SuspendClickThrough();
+        else
+            ApplyClickThrough();
     }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(OverlayViewModel.IsAuthRequired)) return;
+        if (_hwnd == IntPtr.Zero) return;
+
+        if (_viewModel.IsAuthRequired)
+            SuspendClickThrough();
+        else
+            RestoreClickThrough();
+    }
+
+    private void AuthBanner_Click(object sender, RoutedEventArgs e) =>
+        _viewModel.RequestReAuthorization();
 
     private void ApplyClickThrough()
     {

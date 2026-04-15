@@ -25,11 +25,61 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
+        <!-- Auth-required banner — visible when Discord authorization has been revoked -->
+        <Button Grid.Row="0"
+                x:Name="AuthBanner"
+                Cursor="Hand"
+                BorderThickness="0"
+                Padding="10,7,10,7"
+                Click="AuthBanner_Click">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Background" Value="#CC8B0000"/>
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="4"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsAuthRequired}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#CCBF0000"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                <TextBlock Text="⚠ Discord authorization required"
+                           Foreground="#FFEEAA"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           TextOptions.TextFormattingMode="Display"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Click to authorize"
+                           Foreground="#FFDDAA"
+                           FontSize="11"
+                           TextOptions.TextFormattingMode="Display"
+                           HorizontalAlignment="Center"
+                           Margin="0,2,0,0"/>
+            </StackPanel>
+        </Button>
 
         <!-- Drag handle — only visible when Settings window is open -->
         <Border x:Name="DragHandleBorder"
-                Grid.Row="0"
+                Grid.Row="1"
                 Background="#CC1A1A2E"
                 CornerRadius="4,4,0,0"
                 Padding="8,5,8,5"
@@ -50,7 +100,7 @@
         </Border>
 
         <!-- Connection indicator (hidden when null) -->
-        <TextBlock Grid.Row="1"
+        <TextBlock Grid.Row="2"
                    Text="{Binding ConnectionIndicator}"
                    Foreground="#FFCC00"
                    FontSize="12"
@@ -68,7 +118,7 @@
         </TextBlock>
 
         <!-- Speaker list -->
-        <ItemsControl Grid.Row="2"
+        <ItemsControl Grid.Row="3"
                       ItemsSource="{Binding ActiveSpeakers}"
                       Margin="4,0,4,0">
             <ItemsControl.ItemTemplate>
@@ -115,7 +165,7 @@
         </ItemsControl>
 
         <!-- +N more overflow label -->
-        <TextBlock Grid.Row="3"
+        <TextBlock Grid.Row="4"
                    Foreground="#AAAAAA"
                    FontSize="12"
                    Margin="8,2,8,4"
