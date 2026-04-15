@@ -117,7 +117,7 @@ public sealed class DiscordIpcClient : IAsyncDisposable
             args  = new
             {
                 client_id             = ClientId,
-                scopes                = new[] { "rpc", "rpc.voice.read", "identify" },
+                scopes                = new[] { "rpc", "rpc.voice.read", "identify", "guilds" },
                 code_challenge        = codeChallenge,
                 code_challenge_method = "S256",
             },
@@ -133,9 +133,10 @@ public sealed class DiscordIpcClient : IAsyncDisposable
 
     /// <summary>
     /// Sends AUTHENTICATE with the given access token.
+    /// Returns the set of scopes granted by Discord.
     /// Fires AuthRevoked if error code 4006 is received.
     /// </summary>
-    public async Task SendAuthenticate(string accessToken, CancellationToken ct = default)
+    public async Task<IReadOnlySet<string>> SendAuthenticate(string accessToken, CancellationToken ct = default)
     {
         var nonce = Guid.NewGuid().ToString();
         var payload = JsonSerializer.Serialize(new
@@ -150,28 +151,47 @@ public sealed class DiscordIpcClient : IAsyncDisposable
 
         var response = await tcs.Task.WaitAsync(ct);
 
-        // AUTHENTICATE response includes data.guilds — cache names for later lookup
+        var grantedScopes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // AUTHENTICATE response includes data.guilds and data.scopes
         try
         {
-            if (response.TryGetProperty("data", out var data) &&
-                data.TryGetProperty("guilds", out var guilds) &&
-                guilds.ValueKind == JsonValueKind.Array)
+            if (response.TryGetProperty("data", out var data))
             {
-                foreach (var g in guilds.EnumerateArray())
+                // Cache guild names
+                if (data.TryGetProperty("guilds", out var guilds) &&
+                    guilds.ValueKind == JsonValueKind.Array)
                 {
-                    var id   = g.TryGetProperty("id",   out var idEl)   ? idEl.GetString()   : null;
-                    var name = g.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
-                    if (id != null && name != null)
-                        _guildNames[id] = name;
+                    foreach (var g in guilds.EnumerateArray())
+                    {
+                        var id   = g.TryGetProperty("id",   out var idEl)   ? idEl.GetString()   : null;
+                        var name = g.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
+                        if (id != null && name != null)
+                            _guildNames[id] = name;
+                    }
+                    if (_guildNames.Count > 0)
+                        LogService.Info($"DiscordIpcClient: cached {_guildNames.Count} guild name(s) from AUTHENTICATE response.");
                 }
-                if (_guildNames.Count > 0)
-                    LogService.Info($"DiscordIpcClient: cached {_guildNames.Count} guild name(s) from AUTHENTICATE response.");
+
+                // Collect granted scopes
+                if (data.TryGetProperty("scopes", out var scopes) &&
+                    scopes.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var s in scopes.EnumerateArray())
+                    {
+                        var scope = s.GetString();
+                        if (scope != null) grantedScopes.Add(scope);
+                    }
+                    LogService.Info($"DiscordIpcClient: granted scopes = [{string.Join(", ", grantedScopes)}]");
+                }
             }
         }
         catch (Exception ex)
         {
-            LogService.Error("DiscordIpcClient: Failed to parse guild names from AUTHENTICATE response.", ex);
+            LogService.Error("DiscordIpcClient: Failed to parse AUTHENTICATE response.", ex);
         }
+
+        return grantedScopes;
     }
 
     /// <summary>Returns the guild name for the given guild ID, or null if not cached.</summary>

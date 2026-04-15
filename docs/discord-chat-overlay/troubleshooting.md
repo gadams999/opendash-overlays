@@ -71,6 +71,15 @@ If the app stays in Retrying state for more than a few minutes with Discord runn
 
 **Cause**: The `rpc.voice.read` scope requires Discord developer whitelisting for public distribution. During the v0.1.0 private testing phase, only accounts on the developer tester allowlist (up to 50 slots) can authorize successfully.
 
+The full set of scopes the app requests:
+
+| Scope | Purpose | Whitelist required? |
+|---|---|---|
+| `rpc` | Connect to Discord IPC pipe | No |
+| `rpc.voice.read` | Read voice channel membership and speaking events | **Yes** |
+| `identify` | Read the authorized user's profile | No |
+| `guilds` | Read guild (server) names for display in the overlay | No |
+
 **Fix**: Contact the project maintainer to be added to the tester allowlist. This limitation will be resolved once Discord approves the `rpc.voice.read` scope for the application.
 
 ---

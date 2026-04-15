@@ -23,7 +23,7 @@ The installer bundles the .NET 10 runtime; no separate runtime installation is r
 1. Launch **Discord Chat Overlay** from the Start Menu or desktop shortcut
 2. The app starts minimized to the system tray (look for the overlay icon near the clock)
 3. On first launch a Discord authorization dialog appears — **click Authorize** inside Discord to grant access
-   - The app requests the `rpc`, `rpc.voice.read`, and `identify` scopes
+   - The app requests the `rpc`, `rpc.voice.read`, `identify`, and `guilds` scopes
    - No message access, no server management permissions are requested
 4. Once authorized, the tray icon turns to its normal color (connected state)
 5. **Join a Discord voice channel** — the overlay appears automatically showing active speakers

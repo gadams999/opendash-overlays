@@ -210,13 +210,7 @@ public partial class App : Application
 
             if (bundle == null)
             {
-                // First run — full PKCE authorization flow
-                LogService.Info("App: No token found; starting authorization flow.");
-                var verifier  = _tokenStorage.GeneratePkceVerifier();
-                var challenge = _tokenStorage.GeneratePkceChallenge(verifier);
-                var code      = await _ipcClient.SendAuthorize(challenge, ct);
-                bundle        = await _tokenStorage.ExchangeCode(code, verifier, GetClientId());
-                _tokenStorage.WriteToken(bundle);
+                bundle = await AuthorizeAsync(ct);
             }
             else if (_tokenStorage.IsTokenExpiredOrExpiringSoon(bundle))
             {
@@ -226,7 +220,16 @@ public partial class App : Application
             }
 
             LogService.Info("App: sending AUTHENTICATE...");
-            await _ipcClient.SendAuthenticate(bundle.AccessToken, ct);
+            var grantedScopes = await _ipcClient!.SendAuthenticate(bundle.AccessToken, ct);
+
+            // If the stored token pre-dates a scope addition, silently re-authorize
+            if (!grantedScopes.Contains("guilds"))
+            {
+                LogService.Info("App: Token missing 'guilds' scope — re-authorizing to upgrade.");
+                _tokenStorage.DeleteToken();
+                bundle = await AuthorizeAsync(ct);
+                await _ipcClient.SendAuthenticate(bundle.AccessToken, ct);
+            }
 
             // Subscribe global events
             await _ipcClient.Subscribe("VOICE_CHANNEL_SELECT",    null, ct);
@@ -245,6 +248,17 @@ public partial class App : Application
         {
             LogService.Error("App: Connection sequence failed.", ex);
         }
+    }
+
+    private async Task<TokenBundle> AuthorizeAsync(CancellationToken ct)
+    {
+        LogService.Info("App: No token found (or scope upgrade required); starting authorization flow.");
+        var verifier  = _tokenStorage!.GeneratePkceVerifier();
+        var challenge = _tokenStorage.GeneratePkceChallenge(verifier);
+        var code      = await _ipcClient!.SendAuthorize(challenge, ct);
+        var bundle    = await _tokenStorage.ExchangeCode(code, verifier, GetClientId());
+        _tokenStorage.WriteToken(bundle);
+        return bundle;
     }
 
     // ── Reconnect loop ─────────────────────────────────────────────────────
