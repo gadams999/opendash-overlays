@@ -113,6 +113,9 @@ public class VoiceSessionService : INotifyPropertyChanged, IDisposable
     /// <summary>Call after successful AUTHENTICATE to mark the session as Connected.</summary>
     public void SetConnected() => ConnectionState = ConnectionState.Connected;
 
+    /// <summary>Call when Discord is not running so the overlay can display a waiting indicator.</summary>
+    public void SetWaitingForDiscord() => ConnectionState = ConnectionState.WaitingForDiscord;
+
     /// <summary>
     /// Re-resolves display names and AvatarVisible for all current ActiveSpeakers from AliasService.
     /// Call after the user saves alias changes in AliasSettingsCategory so the overlay updates immediately.

@@ -28,6 +28,16 @@ internal static class Program
 
         try
         {
+            // Force the WPF Dispatcher to fully initialise on the STA thread before
+            // Application is constructed.  Without this, Application() creates the
+            // Dispatcher's internal message-only HWND which is immediately subclassed
+            // via HwndSubclass; if Windows delivers a message to that HWND before the
+            // message pump exists, SubclassWndProc fires and calls SetWindowLongPtr —
+            // which can throw DllNotFoundException on .NET 10 WPF before the pump is
+            // running.  Pre-touching CurrentDispatcher here ensures the HWND + subclass
+            // are created in a stable state so App() no longer races against it.
+            _ = System.Windows.Threading.Dispatcher.CurrentDispatcher;
+
             LogService.Info("Program.Main: creating App instance.");
             var app = new App();
 

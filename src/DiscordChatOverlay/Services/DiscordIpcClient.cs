@@ -44,7 +44,7 @@ public sealed class DiscordIpcClient : IAsyncDisposable
         _guildNames = new();
 
     // Completed when Discord sends the READY dispatch after HANDSHAKE
-    private readonly TaskCompletionSource _readyTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private TaskCompletionSource _readyTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     // ── Public events ──────────────────────────────────────────────────────
 
@@ -92,8 +92,8 @@ public sealed class DiscordIpcClient : IAsyncDisposable
 
         if (_pipe == null || !_pipe.IsConnected)
         {
-            LogService.Error("DiscordIpcClient: No Discord IPC pipe found (slots 0–9).");
-            throw new InvalidOperationException("Discord IPC pipe not available.");
+            LogService.Info("DiscordIpcClient: No Discord IPC pipe found (slots 0–9) — Discord not running.");
+            throw new DiscordNotRunningException();
         }
 
         // Start background read loop
@@ -197,6 +197,50 @@ public sealed class DiscordIpcClient : IAsyncDisposable
     /// <summary>Returns the guild name for the given guild ID, or null if not cached.</summary>
     public string? GetGuildName(string? guildId) =>
         guildId != null && _guildNames.TryGetValue(guildId, out var name) ? name : null;
+
+    /// <summary>
+    /// Sends GET_GUILDS and caches the returned guild names.
+    /// Requires the guilds scope; call after a successful AUTHENTICATE.
+    /// </summary>
+    public async Task FetchAndCacheGuildsAsync(CancellationToken ct = default)
+    {
+        var nonce = Guid.NewGuid().ToString();
+        var payload = JsonSerializer.Serialize(new
+        {
+            cmd   = "GET_GUILDS",
+            args  = new { },
+            nonce = nonce
+        });
+
+        var tcs = RegisterPending(nonce);
+        await WriteFrameAsync(1, payload, ct);
+        var response = await tcs.Task.WaitAsync(ct);
+
+        try
+        {
+            if (response.TryGetProperty("data", out var data) &&
+                data.TryGetProperty("guilds", out var guilds) &&
+                guilds.ValueKind == JsonValueKind.Array)
+            {
+                int count = 0;
+                foreach (var g in guilds.EnumerateArray())
+                {
+                    var id   = g.TryGetProperty("id",   out var idEl)   ? idEl.GetString()   : null;
+                    var name = g.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
+                    if (id != null && name != null)
+                    {
+                        _guildNames[id] = name;
+                        count++;
+                    }
+                }
+                LogService.Info($"DiscordIpcClient: cached {count} guild name(s) from GET_GUILDS.");
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("DiscordIpcClient: Failed to parse GET_GUILDS response.", ex);
+        }
+    }
 
     // ── Subscription ───────────────────────────────────────────────────────
 
@@ -505,6 +549,37 @@ public sealed class DiscordIpcClient : IAsyncDisposable
         var tcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
         _pending[nonce] = tcs;
         return tcs;
+    }
+
+    // ── Reset ──────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Tears down the current connection and resets all internal state so that
+    /// <see cref="ConnectAsync"/> can be called again on this same instance.
+    /// Any in-flight pending commands are cancelled.
+    /// </summary>
+    public async Task ResetForReconnectAsync()
+    {
+        _readCts?.Cancel();
+        if (_readTask != null)
+        {
+            try { await _readTask; }
+            catch (OperationCanceledException) { }
+        }
+
+        _pipe?.Dispose();
+        _readCts?.Dispose();
+
+        _pipe     = null;
+        _readCts  = null;
+        _readTask = null;
+        _readyTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        foreach (var kv in _pending)
+            kv.Value.TrySetCanceled();
+        _pending.Clear();
+
+        _guildNames.Clear();
     }
 
     // ── IAsyncDisposable ───────────────────────────────────────────────────

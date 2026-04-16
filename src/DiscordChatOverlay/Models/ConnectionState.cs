@@ -6,5 +6,6 @@ public enum ConnectionState
     Connecting,
     Connected,
     Retrying,
+    WaitingForDiscord,
     Failed
 }

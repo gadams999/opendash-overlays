@@ -51,7 +51,6 @@ public class SettingsViewModel
         _settings.GracePeriodSeconds   = defaults.GracePeriodSeconds;
         _settings.DebounceThresholdMs  = defaults.DebounceThresholdMs;
         _settings.FontSize             = defaults.FontSize;
-        _settings.ShowOnStartup        = defaults.ShowOnStartup;
 
         _settings.Save();
         LoadAll();

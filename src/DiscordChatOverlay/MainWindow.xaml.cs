@@ -105,4 +105,10 @@ public partial class MainWindow : Window
     {
         DragMove();
     }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        System.Windows.Application.Current.Shutdown();
+    }
 }

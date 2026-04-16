@@ -100,9 +100,10 @@ public class OverlayViewModel : INotifyPropertyChanged
             var state = _voiceService.ConnectionState;
             ConnectionIndicator = state switch
             {
-                ConnectionState.Retrying => "⟳ Reconnecting…",
-                ConnectionState.Failed   => null,   // auth banner replaces generic indicator
-                _                        => null
+                ConnectionState.WaitingForDiscord => "◌ Waiting for Discord…",
+                ConnectionState.Retrying          => "⟳ Reconnecting…",
+                ConnectionState.Failed            => null,   // auth banner replaces generic indicator
+                _                                 => null
             };
             IsAuthRequired = state == ConnectionState.Failed;
             IsInChannel    = _voiceService.Session.ChannelId != null;

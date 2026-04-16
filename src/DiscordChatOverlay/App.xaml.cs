@@ -94,9 +94,6 @@ public partial class App : Application
             _mainWindow.Foreground = System.Windows.Media.Brushes.White;
         }
 
-        if (_settings.ShowOnStartup)
-            _mainWindow.Show();
-
         // Build settings view model with currently available categories
         _settingsViewModel = new SettingsViewModel(_settings, new List<ISettingsCategory>
         {
@@ -107,18 +104,7 @@ public partial class App : Application
             new AboutSettingsCategory()
         });
 
-        // Hide/show overlay based on channel membership or auth-required state
-        _overlayViewModel.PropertyChanged += (_, pe) =>
-        {
-            if (pe.PropertyName == nameof(OverlayViewModel.IsInChannel) ||
-                pe.PropertyName == nameof(OverlayViewModel.IsAuthRequired))
-            {
-                if (_overlayViewModel.IsInChannel || _overlayViewModel.IsAuthRequired)
-                    _mainWindow.Show();
-                else
-                    _mainWindow.Hide();
-            }
-        };
+        _mainWindow.Show();
 
         _overlayViewModel.ReAuthorizationRequested += OnReAuthorizationRequested;
 
@@ -204,7 +190,28 @@ public partial class App : Application
     {
         try
         {
-            await _ipcClient!.ConnectAsync(ct);
+            // Phase 1: wait for Discord IPC pipe — polls every 5 s if Discord is not running
+            bool waitLogged = false;
+            while (true)
+            {
+                try
+                {
+                    await _ipcClient!.ConnectAsync(ct);
+                    break;
+                }
+                catch (DiscordNotRunningException)
+                {
+                    if (!waitLogged)
+                    {
+                        waitLogged = true;
+                        LogService.Info("App: Discord not running — retrying every 5 s.");
+                        _voiceService!.SetWaitingForDiscord();
+                    }
+                    // _pipe/_readCts/_readTask are all null (never set on a failed connect),
+                    // so ConnectAsync can be retried on the same instance — no dispose/recreate needed.
+                    await Task.Delay(5_000, ct);
+                }
+            }
 
             LogService.Info("App: waiting for Discord READY...");
             await _ipcClient.WaitForReadyAsync(ct);
@@ -233,6 +240,8 @@ public partial class App : Application
                 bundle = await AuthorizeAsync(ct);
                 await _ipcClient.SendAuthenticate(bundle.AccessToken, ct);
             }
+
+            await _ipcClient.FetchAndCacheGuildsAsync(ct);
 
             // Subscribe global events
             await _ipcClient.Subscribe("VOICE_CHANNEL_SELECT",    null, ct);
@@ -304,10 +313,7 @@ public partial class App : Application
 
             try
             {
-                await _ipcClient!.DisposeAsync();
-                _ipcClient = new DiscordIpcClient();
-                _ipcClient.ConnectionDropped += OnConnectionDropped;
-                _ipcClient.AuthRevoked       += OnAuthRevoked;
+                await _ipcClient!.ResetForReconnectAsync();
 
                 await ConnectAsync(ct);
                 return; // success
@@ -409,6 +415,7 @@ public partial class App : Application
 
         _notifyIcon.Icon = connectionIndicator switch
         {
+            { } s when s.Contains("Waiting")      => _iconAmber ?? _iconDefault,
             { } s when s.Contains("Reconnecting") => _iconAmber ?? _iconDefault,
             { } s when s.Contains("Disconnected") => _iconRed   ?? _iconDefault,
             _                                      => _iconDefault

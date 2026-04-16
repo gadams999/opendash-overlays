@@ -69,8 +69,6 @@ public class AppSettings
         set => _fontColor = string.IsNullOrWhiteSpace(value) ? "#FFFFFF" : value;
     }
 
-    public bool ShowOnStartup { get; set; } = true;
-
     /// <summary>
     /// Loads settings from %APPDATA%\DiscordChatOverlay\settings.json.
     /// Returns defaults and logs an error on missing or corrupt file.
