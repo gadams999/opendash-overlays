@@ -94,6 +94,17 @@ public partial class App : Application
             _mainWindow.Foreground = System.Windows.Media.Brushes.White;
         }
 
+        // Apply saved background color
+        try
+        {
+            var bgColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(_settings.BackgroundColor);
+            _mainWindow.SpeakerBackground = new System.Windows.Media.SolidColorBrush(bgColor);
+        }
+        catch
+        {
+            _mainWindow.SpeakerBackground = System.Windows.Media.Brushes.Transparent;
+        }
+
         // Build settings view model with currently available categories
         _settingsViewModel = new SettingsViewModel(_settings, new List<ISettingsCategory>
         {

@@ -36,6 +36,7 @@ public class AppearanceSettingsCategory : ISettingsCategory
     private Slider?    _fontSizeSlider;
     private TextBlock? _fontSizeLabel;
     private TextBox?   _fontColorTextBox;
+    private TextBox?   _backgroundColorTextBox;
 
     public string CategoryName => "Appearance";
     public int SortOrder       => 30;
@@ -144,7 +145,12 @@ public class AppearanceSettingsCategory : ISettingsCategory
         // ── Font color ─────────────────────────────────────────────────────
 
         panel.Children.Add(MakeSectionHeader("Font color"));
-        _fontColorTextBox = BuildColorPicker(panel);
+        _fontColorTextBox = BuildColorPicker(panel, ApplyFontColor);
+
+        // ── Background color ───────────────────────────────────────────────
+
+        panel.Children.Add(MakeSectionHeader("Background color"));
+        _backgroundColorTextBox = BuildColorPicker(panel, ApplyBackgroundColor);
 
         LoadValues();
 
@@ -182,6 +188,10 @@ public class AppearanceSettingsCategory : ISettingsCategory
         // Font color
         if (_fontColorTextBox != null)
             _settings.FontColor = _fontColorTextBox.Text;
+
+        // Background color
+        if (_backgroundColorTextBox != null)
+            _settings.BackgroundColor = _backgroundColorTextBox.Text;
 
         _settings.Save();
     }
@@ -231,6 +241,9 @@ public class AppearanceSettingsCategory : ISettingsCategory
 
         if (_fontColorTextBox != null)
             _fontColorTextBox.Text = _settings.FontColor;
+
+        if (_backgroundColorTextBox != null)
+            _backgroundColorTextBox.Text = _settings.BackgroundColor;
     }
 
     // ── Control builders ───────────────────────────────────────────────────
@@ -263,7 +276,7 @@ public class AppearanceSettingsCategory : ISettingsCategory
     /// Builds a hex color text box + "Pick" button row and appends it to <paramref name="parent"/>.
     /// Returns the text box so the caller can read/write the value.
     /// </summary>
-    private TextBox BuildColorPicker(StackPanel parent)
+    private TextBox BuildColorPicker(StackPanel parent, Action<string> applyColor)
     {
         var row     = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 16) };
         var textBox = new TextBox { Width = 100, VerticalAlignment = VerticalAlignment.Center };
@@ -279,11 +292,11 @@ public class AppearanceSettingsCategory : ISettingsCategory
             {
                 var c = dialog.Color;
                 textBox.Text = $"#{c.R:X2}{c.G:X2}{c.B:X2}";
-                ApplyFontColor(textBox.Text);
+                applyColor(textBox.Text);
             }
         };
 
-        textBox.LostFocus += (_, _) => ApplyFontColor(textBox.Text);
+        textBox.LostFocus += (_, _) => applyColor(textBox.Text);
 
         row.Children.Add(textBox);
         row.Children.Add(pickBtn);
@@ -297,6 +310,16 @@ public class AppearanceSettingsCategory : ISettingsCategory
         {
             var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(colorHex);
             _mainWindow.Foreground = new System.Windows.Media.SolidColorBrush(color);
+        }
+        catch { /* ignore invalid hex strings */ }
+    }
+
+    private void ApplyBackgroundColor(string colorHex)
+    {
+        try
+        {
+            var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(colorHex);
+            _mainWindow.SpeakerBackground = new System.Windows.Media.SolidColorBrush(color);
         }
         catch { /* ignore invalid hex strings */ }
     }

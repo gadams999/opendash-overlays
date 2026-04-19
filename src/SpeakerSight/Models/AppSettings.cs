@@ -69,6 +69,13 @@ public class AppSettings
         set => _fontColor = string.IsNullOrWhiteSpace(value) ? "#FFFFFF" : value;
     }
 
+    private string _backgroundColor = "#282A36";
+    public string BackgroundColor
+    {
+        get => _backgroundColor;
+        set => _backgroundColor = string.IsNullOrWhiteSpace(value) ? "#282A36" : value;
+    }
+
     /// <summary>
     /// Loads settings from %APPDATA%\SpeakerSight\settings.json.
     /// Returns defaults and logs an error on missing or corrupt file.

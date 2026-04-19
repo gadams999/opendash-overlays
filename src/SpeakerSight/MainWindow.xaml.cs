@@ -21,6 +21,16 @@ public partial class MainWindow : Window
     [DllImport("user32.dll", SetLastError = true)]
     private static extern nint SetWindowLongPtr(IntPtr hwnd, int index, nint newStyle);
 
+    public static readonly DependencyProperty SpeakerBackgroundProperty =
+        DependencyProperty.Register(nameof(SpeakerBackground), typeof(System.Windows.Media.Brush), typeof(MainWindow),
+            new PropertyMetadata(System.Windows.Media.Brushes.Transparent));
+
+    public System.Windows.Media.Brush SpeakerBackground
+    {
+        get => (System.Windows.Media.Brush)GetValue(SpeakerBackgroundProperty);
+        set => SetValue(SpeakerBackgroundProperty, value);
+    }
+
     private IntPtr _hwnd;
     private OverlayViewModel _viewModel = null!;
 
