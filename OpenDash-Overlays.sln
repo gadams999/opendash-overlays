@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -15,9 +15,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WheelOverlay", "src\WheelOv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WheelOverlay.Tests", "tests\WheelOverlay.Tests\WheelOverlay.Tests.csproj", "{60445296-0302-4E07-ACBA-997F9986D92D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordChatOverlay", "src\DiscordChatOverlay\DiscordChatOverlay.csproj", "{2A5B4747-638A-4B0D-BD5C-9A17F488B499}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeakerSight", "src\SpeakerSight\SpeakerSight.csproj", "{2A5B4747-638A-4B0D-BD5C-9A17F488B499}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordChatOverlay.Tests", "tests\DiscordChatOverlay.Tests\DiscordChatOverlay.Tests.csproj", "{DDB19DEB-6D49-4C43-865C-823CD07B1017}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeakerSight.Tests", "tests\SpeakerSight.Tests\SpeakerSight.Tests.csproj", "{DDB19DEB-6D49-4C43-865C-823CD07B1017}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

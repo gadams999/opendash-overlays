@@ -21,11 +21,11 @@ nav:
     - Installation: wheel-overlay/installation.md
     - Configuration: wheel-overlay/configuration.md
     - Troubleshooting: wheel-overlay/troubleshooting.md
-  - Discord Chat Overlay:
-    - Overview: discord-chat-overlay/index.md
-    - Getting Started: discord-chat-overlay/getting-started.md
-    - Settings: discord-chat-overlay/settings.md
-    - Troubleshooting: discord-chat-overlay/troubleshooting.md
+  - SpeakerSight:
+    - Overview: speakersight/index.md
+    - Getting Started: speakersight/getting-started.md
+    - Settings: speakersight/settings.md
+    - Troubleshooting: speakersight/troubleshooting.md
   - Common Setup: common-setup/index.md
   - Contribute: contribute/index.md
 
