@@ -55,7 +55,7 @@ public class AppSettings
         set => _fontSize = Math.Clamp(value, 8, 32);
     }
 
-    private string _fontFamily = "Segoe UI";
+    private string _fontFamily = "DM Sans";
     public string FontFamily
     {
         get => _fontFamily;
