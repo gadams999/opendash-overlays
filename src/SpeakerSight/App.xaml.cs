@@ -105,6 +105,9 @@ public partial class App : Application
             _mainWindow.SpeakerBackground = System.Windows.Media.Brushes.Transparent;
         }
 
+        // Apply saved speaker spacing
+        _mainWindow.SpeakerSpacing = _settings.SpeakerSpacing;
+
         // Build settings view model with currently available categories
         _settingsViewModel = new SettingsViewModel(_settings, new List<ISettingsCategory>
         {

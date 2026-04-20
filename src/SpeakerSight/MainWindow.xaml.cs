@@ -31,6 +31,16 @@ public partial class MainWindow : Window
         set => SetValue(SpeakerBackgroundProperty, value);
     }
 
+    public static readonly DependencyProperty SpeakerSpacingProperty =
+        DependencyProperty.Register(nameof(SpeakerSpacing), typeof(int), typeof(MainWindow),
+            new PropertyMetadata(4));
+
+    public int SpeakerSpacing
+    {
+        get => (int)GetValue(SpeakerSpacingProperty);
+        set => SetValue(SpeakerSpacingProperty, value);
+    }
+
     private IntPtr _hwnd;
     private OverlayViewModel _viewModel = null!;
 

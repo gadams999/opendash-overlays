@@ -15,8 +15,9 @@
         <!-- Declared here (not only in App.xaml) so StaticResource lookup inside
              the DataTemplate is guaranteed to find them regardless of when
              MaterialDesignBootstrap modifies Application.Resources.MergedDictionaries. -->
-        <conv:AvatarUrlConverter     x:Key="AvatarUrlConverter"/>
+        <conv:AvatarUrlConverter        x:Key="AvatarUrlConverter"/>
         <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <conv:SpacingToThicknessConverter x:Key="SpacingToThicknessConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -124,7 +125,8 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <!-- Outer row — opacity drives the fade animation -->
-                    <Grid Opacity="{Binding Opacity}" Margin="2,0,2,0">
+                    <Grid Opacity="{Binding Opacity}"
+                          Margin="{Binding SpeakerSpacing, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource SpacingToThicknessConverter}}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="32"/>
                             <ColumnDefinition Width="*"/>
@@ -155,6 +157,7 @@
                         <!-- Display name — Background and Foreground both user-configurable -->
                         <Border Grid.Column="1"
                                 Background="{Binding SpeakerBackground, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CornerRadius="4"
                                 Padding="6,4,4,4">
                             <TextBlock Text="{Binding DisplayName}"
                                        VerticalAlignment="Center"

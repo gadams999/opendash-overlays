@@ -76,6 +76,13 @@ public class AppSettings
         set => _backgroundColor = string.IsNullOrWhiteSpace(value) ? "#282A36" : value;
     }
 
+    private int _speakerSpacing = 4;
+    public int SpeakerSpacing
+    {
+        get => _speakerSpacing;
+        set => _speakerSpacing = Math.Clamp(value, 0, 24);
+    }
+
     /// <summary>
     /// Loads settings from %APPDATA%\SpeakerSight\settings.json.
     /// Returns defaults and logs an error on missing or corrupt file.

@@ -37,6 +37,8 @@ public class AppearanceSettingsCategory : ISettingsCategory
     private TextBlock? _fontSizeLabel;
     private TextBox?   _fontColorTextBox;
     private TextBox?   _backgroundColorTextBox;
+    private Slider?    _spacingSlider;
+    private TextBlock? _spacingLabel;
 
     public string CategoryName => "Appearance";
     public int SortOrder       => 30;
@@ -152,6 +154,25 @@ public class AppearanceSettingsCategory : ISettingsCategory
         panel.Children.Add(MakeSectionHeader("Background color"));
         _backgroundColorTextBox = BuildColorPicker(panel, ApplyBackgroundColor);
 
+        // ── Speaker spacing ────────────────────────────────────────────────
+
+        panel.Children.Add(MakeSectionHeader("Speaker spacing (px)"));
+
+        var spacingRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
+        _spacingLabel = MakeValueLabel(_settings.SpeakerSpacing.ToString(), width: 36);
+        spacingRow.Children.Add(_spacingLabel);
+        panel.Children.Add(spacingRow);
+
+        _spacingSlider = MakeSlider(minimum: 0, maximum: 24, value: _settings.SpeakerSpacing, tickFrequency: 1);
+        _spacingSlider.Margin = new Thickness(0, 0, 0, 16);
+        _spacingSlider.ValueChanged += (_, e) =>
+        {
+            int px = (int)e.NewValue;
+            if (_spacingLabel != null) _spacingLabel.Text = px.ToString();
+            _mainWindow.SpeakerSpacing = px;
+        };
+        panel.Children.Add(_spacingSlider);
+
         LoadValues();
 
         // Keep position text boxes in sync whenever the overlay window moves (e.g. after dragging)
@@ -192,6 +213,10 @@ public class AppearanceSettingsCategory : ISettingsCategory
         // Background color
         if (_backgroundColorTextBox != null)
             _settings.BackgroundColor = _backgroundColorTextBox.Text;
+
+        // Speaker spacing
+        if (_spacingSlider != null)
+            _settings.SpeakerSpacing = (int)_spacingSlider.Value;
 
         _settings.Save();
     }
@@ -244,6 +269,12 @@ public class AppearanceSettingsCategory : ISettingsCategory
 
         if (_backgroundColorTextBox != null)
             _backgroundColorTextBox.Text = _settings.BackgroundColor;
+
+        if (_spacingSlider != null)
+        {
+            _spacingSlider.Value = _settings.SpeakerSpacing;
+            if (_spacingLabel != null) _spacingLabel.Text = _settings.SpeakerSpacing.ToString();
+        }
     }
 
     // ── Control builders ───────────────────────────────────────────────────
