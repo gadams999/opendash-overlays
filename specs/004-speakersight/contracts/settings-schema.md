@@ -21,7 +21,7 @@
 
   // Display behaviour
   "DisplayMode": "SpeakersOnly",    // string enum: "SpeakersOnly" | "AllMembers"
-  "GracePeriodSeconds": 2.0,        // double — range [0.0, 10.0]
+  "GracePeriodSeconds": 2.0,        // double — range [0.0, 2.0]
   "DebounceThresholdMs": 200,       // int — range [0, 1000]; 0 = disabled
 
   // App
@@ -50,7 +50,7 @@
 | Field | Out-of-range behaviour |
 |-------|----------------------|
 | `Opacity` | Silently clamped to [10, 100]; logged at Info level |
-| `GracePeriodSeconds` | Silently clamped to [0.0, 10.0]; logged at Info level |
+| `GracePeriodSeconds` | Silently clamped to [0.0, 2.0]; logged at Info level |
 | `DebounceThresholdMs` | Silently clamped to [0, 1000]; logged at Info level |
 | `FontSize` | Silently clamped to [8, 32]; logged at Info level |
 | `WindowLeft`/`WindowTop` | If position outside all monitors → reset to (20.0, 20.0) on primary screen; logged at Warning level |

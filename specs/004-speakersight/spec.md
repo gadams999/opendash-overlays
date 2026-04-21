@@ -42,17 +42,17 @@ While the user is in a Discord voice channel, the overlay displays voice channel
 
 1. **Given** the user is in a voice channel and a participant begins speaking, **When** Discord reports voice activity, **Then** that participant's display name appears on the overlay within 500 ms.
 2. **Given** a participant on the overlay stops speaking, **When** voice activity ceases, **Then** their name enters a dim/fade "recently speaking" grace period (default 2 seconds, user-configurable) before being removed (speakers-only) or returned to a plain silent state (all-members).
-3a. **Given** a participant is in the "recently speaking" grace period, **When** they begin speaking again, **Then** their display immediately returns to full active intensity and the grace period timer resets.
-3. **Given** multiple participants are speaking simultaneously, **When** voice activity data is received, **Then** all active speakers are shown on the overlay at the same time, each clearly distinguishable.
-4. **Given** the user is not in any voice channel, **When** the overlay is active, **Then** the overlay is hidden or shows an idle state (e.g., blank or "Not in a channel").
-5. **Given** the display mode is set to "all members", **When** participants are in the channel, **Then** all members are listed with active speakers visually distinguished from silent ones.
-6. **Given** the display mode is set to "speakers only" (default), **When** no one is speaking, **Then** the overlay shows an idle state rather than a list of silent members.
+3. **Given** a participant is in the "recently speaking" grace period, **When** they begin speaking again, **Then** their display immediately returns to full active intensity and the grace period timer resets.
+4. **Given** multiple participants are speaking simultaneously, **When** voice activity data is received, **Then** all active speakers are shown on the overlay at the same time, each clearly distinguishable.
+5. **Given** the user is not in any voice channel, **When** the overlay is active, **Then** the overlay is hidden or shows an idle state (e.g., blank or "Not in a channel").
+6. **Given** the display mode is set to "all members", **When** participants are in the channel, **Then** all members are listed with active speakers visually distinguished from silent ones.
+7. **Given** the display mode is set to "speakers only" (default), **When** no one is speaking, **Then** the overlay shows an idle state rather than a list of silent members.
 
 ---
 
 ### User Story 3 - Configure Overlay Appearance and Position (Priority: P3)
 
-The user opens the settings panel to adjust where the overlay appears on screen, its size, transparency, and color theme (dark/light). Changes are previewed live and persisted across application restarts.
+The user opens the settings panel to adjust where the overlay appears on screen, its size, transparency, and color theme (dark/light/system). Changes are previewed live and persisted across application restarts.
 
 **Why this priority**: Customization is important for usability — users run the overlay alongside games or other applications and need precise control over positioning and visual weight. However, a fixed default position delivers the core value without this story.
 
@@ -116,8 +116,8 @@ A user belongs to multiple Discord servers and voice channels where the same per
 4. **Given** the avatar toggle is turned off for a ChannelMember entry, **When** that member speaks alongside a member whose avatar is on, **Then** both names start at the same horizontal position — the avatar column for the avatar-off member is visibly empty, preserving alignment.
 5. **Given** a custom display name contains inline emoji (e.g., "🎮 Johnny"), **When** that member speaks, **Then** the overlay renders the full custom name string including the emoji as part of the name text.
 6. **Given** the user clears the custom name field for a ChannelMember entry, **When** that member next speaks, **Then** the overlay reverts to their Discord display name.
-6. **Given** a member's Discord display name changes after their ChannelMember entry was created, **When** they speak in a context where a custom name is set, **Then** the custom name still applies because the entry is keyed to the member's permanent snowflake ID. The stored default name is updated to reflect their new Discord display name.
-7. **Given** a ChannelContext record exists with custom member names set, **When** the user deletes that context via the settings panel and confirms the deletion prompt, **Then** the ChannelContext and all its ChannelMember entries are permanently removed and the context is recreated fresh if the user rejoins that channel.
+7. **Given** a member's Discord display name changes after their ChannelMember entry was created, **When** they speak in a context where a custom name is set, **Then** the custom name still applies because the entry is keyed to the member's permanent snowflake ID. The stored default name is updated to reflect their new Discord display name.
+8. **Given** a ChannelContext record exists with custom member names set, **When** the user deletes that context via the settings panel and confirms the deletion prompt, **Then** the ChannelContext and all its ChannelMember entries are permanently removed and the context is recreated fresh if the user rejoins that channel.
 
 ---
 
@@ -149,7 +149,7 @@ A user belongs to multiple Discord servers and voice channels where the same per
 - **FR-004b**: If a participant in the grace period resumes speaking, the overlay MUST immediately restore full opacity (1.0), cancel the fade animation, and reset the grace period timer.
 - **FR-004c**: Active speakers (opacity 1.0) MUST always appear above recently-speaking (fading) participants in the overlay list. Within each group, order is by most-recently-activated. Silent members in all-members mode appear below both groups, sorted alphabetically.
 - **FR-005**: The system MUST hide the overlay automatically when the user is not in any voice channel.
-- **FR-006**: The system MUST support simultaneous display of up to 8 active speakers without overlap or clipping. If more than 8 speakers are active at once, the overlay MUST show the first 8 and append a `+N more` count indicator for the remainder. This cap is fixed for v0.1.0 and is not user-configurable.
+- **FR-006**: The system MUST support simultaneous display of up to 8 active speakers without overlap or clipping. If more than 8 speakers are active at once, the overlay MUST show the 8 most-recently-activated speakers and append a `+N more` count indicator for the remainder. This cap is fixed for v0.1.0 and is not user-configurable.
 - **FR-007**: The system MUST persist user configuration (position, size, opacity, color theme) to a JSON settings file at `%APPDATA%\SpeakerSight\settings.json`.
 - **FR-008**: The application MUST start minimized to the system tray and provide a tray context menu with at minimum: Show Overlay, Hide Overlay, Settings, and Exit.
 - **FR-009**: The system MUST log application events and errors to `%APPDATA%\SpeakerSight\logs.txt` with 1 MB rotation, using OverlayCore's LogService.
@@ -170,6 +170,8 @@ A user belongs to multiple Discord servers and voice channels where the same per
 - **FR-014b-layout**: The overlay MUST use a fixed two-column layout for member rows — a fixed-width avatar column on the left and a name column on the right. Name text MUST always start at the same horizontal position regardless of whether the avatar is visible; when avatar is off the avatar column is left empty. This ensures all member names remain vertically aligned.
 - **FR-014c**: ChannelContext and ChannelMember data MUST be stored in a dedicated `aliases.json` file under `%APPDATA%\SpeakerSight\`. Malformed or missing entries MUST be skipped and logged without crashing the application. The settings panel is the only supported interface for editing custom names and toggles.
 - **FR-014d**: ChannelContext records MUST be retained indefinitely. The settings panel MUST allow the user to manually delete any ChannelContext record, which permanently removes it and all its associated ChannelMember entries. Deletion MUST require a confirmation step to prevent accidental data loss.
+- **FR-016**: The configured font size MUST be applied uniformly to all text elements rendered on the overlay — speaker names, the connection status indicator, and the `+N more` overflow count. The overlay window dimensions MUST be computed from the current font size and fixed at those dimensions for the duration of the session; the overlay MUST NOT resize dynamically as speakers are added or removed. The overlay height MUST accommodate exactly 8 speaker rows at the configured font size with consistent inter-row spacing. The overlay width MUST be calculated as: avatar column (fixed width per FR-014b-layout) plus inter-column spacing plus a name column wide enough to display 32 repetitions of the character `W` at the current font size and overlay font family (used as the reference for maximum glyph advance width). Font size changes MUST be persisted to `settings.json` and MUST cause the overlay to recompute and apply new dimensions immediately.
+- **FR-016a**: When the settings panel is open, the overlay MUST display a live preview using 8 placeholder speaker rows — named "Speaker 1" through "Speaker 8" — allowing the user to evaluate font size, text color, speaker name background, and opacity without a live Discord session. The first 5 placeholder rows MUST render in the Active state (full opacity) and the last 3 in the RecentlyActive state (fading opacity) so that both visual states are visible in the preview. The live preview MUST reflect the overlay's current on-screen position; position-drag in the settings panel MUST move the overlay in real time during preview as per normal live-preview behavior. The live preview replaces any real speaker data while the settings panel is open and restores live data immediately on close.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -213,7 +215,7 @@ A user belongs to multiple Discord servers and voice channels where the same per
 
 - Q: How should the Discord auth token be persisted between launches? → A: Windows Credential Manager (DPAPI-encrypted); token must never be stored in plain text.
 - Q: Should the overlay show only speaking participants or all voice channel members? → A: User-configurable via a settings toggle; default is speakers-only. All-members mode shows every channel participant with active speakers visually distinguished.
-- Q: How should the overlay behave when a speaker stops talking — remove immediately or linger? → A: Configurable grace period (default 2s, range 0–10s) with dim/fade animation. Resuming speech during the grace period resets to full intensity immediately.
+- Q: How should the overlay behave when a speaker stops talking — remove immediately or linger? → A: Configurable grace period (default 2s, range 0–2s) with dim/fade animation. Resuming speech during the grace period resets to full intensity immediately.
 - Q: How should the overlay handle exclusive fullscreen games? → A: Match WheelOverlay pattern — always-on-top + WS_EX_TRANSPARENT click-through only; exclusive fullscreen (DirectX fullscreen exclusive) is unsupported. Users must run games in borderless windowed mode.
 - Q: How should disconnection/retry state be communicated to the user? → A: Tray icon changes to amber (Retrying) or red (Failed/unrecoverable); overlay shows a light-colored status text indicator ("— retrying" / "— failed", wording TBD). Retry is indefinite for recoverable IPC drops; Failed state reserved for non-recoverable errors (e.g., auth revoked).
 - Q: What identity key should be used to anchor member aliases? → A: Discord numeric user ID (snowflake) — permanent, survives all renames. Settings UI displays human-readable name alongside the stored ID.

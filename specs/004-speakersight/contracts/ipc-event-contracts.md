@@ -207,7 +207,9 @@ public record SpeakingEventArgs(string UserId);
 public record VoiceStateEventArgs(
     string UserId,
     string DisplayName,   // nick ?? username
-    string? AvatarHash,
+    string? AvatarHash,   // global avatar hash (user.avatar)
+    string? GuildAvatarHash, // guild-specific avatar hash (member.avatar); preferred over AvatarHash
+    string? GuildId,      // required to construct guild avatar CDN URL
     bool IsMuted,
     bool IsDeafened);
 

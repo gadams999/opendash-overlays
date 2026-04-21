@@ -18,7 +18,7 @@ Build `SpeakerSight` v0.1.0 — a WPF always-on-top overlay that connects to the
 - `MaterialDesignThemes` v5.3.1 (via OverlayCore) — settings window UI
 
 **Storage**:
-- `%APPDATA%\SpeakerSight\settings.json` — overlay preferences (position, opacity, theme, display mode, debounce, grace period)
+- `%APPDATA%\SpeakerSight\settings.json` — overlay preferences (position, opacity, theme, display mode, debounce, grace period, font size)
 - `%APPDATA%\SpeakerSight\aliases.json` — ChannelContext + ChannelMember records
 - Windows Credential Manager target `"SpeakerSight"` — OAuth2 token bundle (access_token, refresh_token, expiry_utc as JSON)
 
@@ -26,7 +26,7 @@ Build `SpeakerSight` v0.1.0 — a WPF always-on-top overlay that connects to the
 **Target Platform**: Windows 10/11 desktop (net10.0-windows), WPF + WinForms (NotifyIcon)
 **Project Type**: Desktop overlay application
 **Performance Goals**: <500 ms speaker appearance latency (SC-002); <2% CPU / <100 MB RAM steady-state (SC-007)
-**Constraints**: Click-through by default (FR-011); always-on-top; borderless windowed games only (FR-011a); 8-speaker cap (FR-006)
+**Constraints**: Click-through by default (FR-011); always-on-top; borderless windowed games only (FR-011a); 8 most-recently-activated speakers displayed, remainder in `+N more` count (FR-006)
 **Scale/Scope**: Single voice channel, single guild, single machine; up to 8 simultaneous display entries
 
 **Discord IPC**:
@@ -78,8 +78,8 @@ src/SpeakerSight/
 ├── App.xaml / App.xaml.cs       ← app lifecycle, NotifyIcon tray, ThemeService, settings window, shutdown
 ├── MainWindow.xaml / .cs        ← always-on-top click-through overlay, hosts SpeakerPanel
 ├── Converters/
-│   ├── SpeakerStateToOpacityConverter.cs   ← active→1.0, recently-active→0.4, silent→0.0
-│   └── BoolToVisibilityConverter.cs
+│   ├── AvatarUrlConverter.cs                ← IMultiValueConverter: [GuildId, UserId, GuildAvatarHash, AvatarHash] → CDN URL or null
+│   └── BoolToVisibilityConverter.cs         ← true→Visible, false→Hidden (preserves column width)
 ├── Models/
 │   ├── AppSettings.cs           ← JSON-serializable preferences; Load()/Save() to settings.json
 │   ├── ChannelContext.cs        ← guild+channel record; list of ChannelMember
@@ -171,12 +171,14 @@ See `data-model.md`, `contracts/`, `quickstart.md`.
 [any] ──debounce spike < threshold──────────────► no state change (timer resets)
 ```
 
-**Overlay layout** (FR-014b-layout, FR-004c):
+**Overlay layout** (FR-014b-layout, FR-004c, FR-016, FR-016a):
 - Fixed two-column WPF `Grid`: avatar `Image` column (32 px fixed width; guild avatar preferred, global fallback; CDN async load via `AvatarUrlConverter`; fails silently to blank) + name column (fill)
 - Row `Opacity` bound to `ActiveSpeaker.Opacity` (drives smooth 1.0→0.0 fade over grace period)
 - `ItemsControl` bound to `OverlayViewModel.ActiveSpeakers` (max 8 items); order: Active (Opacity 1.0) first → RecentlyActive (fading) → Silent (all-members mode only)
 - 9th+ active/recently-active speakers: `+N more` `TextBlock` row below the list
 - Connection indicator row (top): hidden when Connected; shows "⟳ Reconnecting…" (Retrying) or "✕ Disconnected" (Failed)
+- **Overlay dimensions** (FR-016): computed once on startup and on every `FontSize` change. Width = avatar column (32 px) + column gap + name column width, where name column width = 32 × `FormattedText.WidthIncludingTrailingWhitespace` of the character `"W"` at the configured `FontSize` using the overlay's `FontFamily`. Height = 8 × (single-row height at `FontSize` + inter-row spacing). `MainWindow` exposes `RecomputeDimensions(fontSize)` called from `AppearanceSettingsCategory` on slider change and on startup.
+- **Preview mode** (FR-016a): `OverlayViewModel` exposes `bool IsPreviewMode`. When `true`, `ActiveSpeakers` is populated with 8 stub `ActiveSpeaker` entries ("Speaker 1"–"Speaker 8"; first 5 in `Active` state at `Opacity=1.0`, last 3 in `RecentlyActive` state at descending opacity 0.7/0.5/0.3) instead of live data. `VoiceSessionService` events are ignored while preview mode is active. `IsPreviewMode` is set to `true` when the settings window opens (in `App.ShowSettings()`) and back to `false` when it closes. Overlay position remains live during preview — position-drag in `AppearanceSettingsCategory` moves the window in real time as per US3 AC1.
 
 **Debounce + grace period** (both in `VoiceSessionService`):
 - Leading edge: `System.Threading.Timer` per participant; voice activity starts timer, stop before threshold resets it
