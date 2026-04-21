@@ -15,9 +15,10 @@
         <!-- Declared here (not only in App.xaml) so StaticResource lookup inside
              the DataTemplate is guaranteed to find them regardless of when
              MaterialDesignBootstrap modifies Application.Resources.MergedDictionaries. -->
-        <conv:AvatarUrlConverter        x:Key="AvatarUrlConverter"/>
-        <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <conv:SpacingToThicknessConverter x:Key="SpacingToThicknessConverter"/>
+        <conv:AvatarUrlConverter              x:Key="AvatarUrlConverter"/>
+        <conv:BoolToVisibilityConverter       x:Key="BoolToVisibilityConverter"/>
+        <conv:SpacingToThicknessConverter     x:Key="SpacingToThicknessConverter"/>
+        <conv:SpacingToCornerRadiusConverter  x:Key="SpacingToCornerRadiusConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -155,14 +156,16 @@
                         </Image>
 
                         <!-- Display name — Background and Foreground both user-configurable -->
+                        <!-- HorizontalAlignment=Left so the background pill wraps text width only -->
+                        <!-- CornerRadius collapses to 0 at spacing=0 to eliminate junction gaps -->
                         <Border Grid.Column="1"
+                                HorizontalAlignment="Left"
                                 Background="{Binding SpeakerBackground, RelativeSource={RelativeSource AncestorType=Window}}"
-                                CornerRadius="4"
+                                CornerRadius="{Binding SpeakerSpacing, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource SpacingToCornerRadiusConverter}}"
                                 Padding="6,4,4,4">
                             <TextBlock Text="{Binding DisplayName}"
                                        VerticalAlignment="Center"
-                                       TextOptions.TextFormattingMode="Display"
-                                       TextTrimming="CharacterEllipsis"/>
+                                       TextOptions.TextFormattingMode="Display"/>
                         </Border>
                     </Grid>
                 </DataTemplate>

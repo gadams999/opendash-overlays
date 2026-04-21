@@ -77,7 +77,6 @@ public partial class MainWindow : Window
     {
         const double avatarColumnWidth = 32.0;
         const double columnGap        = 8.0;
-        const double interRowSpacing  = 4.0;
 
         double pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
         var typeface = new Typeface(FontFamily, FontStyles.Normal, FontWeight, FontStretches.Normal);
@@ -92,9 +91,8 @@ public partial class MainWindow : Window
 
         double nameColumnWidth = 32 * ft.WidthIncludingTrailingWhitespace;
 
-        SizeToContent = SizeToContent.Manual;
-        Width  = avatarColumnWidth + columnGap + nameColumnWidth;
-        Height = 8 * (ft.Height + interRowSpacing);
+        SizeToContent = SizeToContent.Height;
+        Width = avatarColumnWidth + columnGap + nameColumnWidth;
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
