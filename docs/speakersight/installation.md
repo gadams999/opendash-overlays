@@ -1,18 +1,17 @@
 ---
-title: "Getting Started"
+title: "Installation"
 description: "Install SpeakerSight, authorize with Discord, and start using the overlay"
 ---
 
-# Getting Started
+# Installation
 
-## Prerequisites
+## Before You Begin
 
-- Windows 10 (1903+) or Windows 11, 64-bit
-- Discord desktop app installed, running, and signed in to an account
+Ensure your system meets the [Requirements](requirements.md) and complete the shared operating system setup in [Common Setup](/common-setup/) before proceeding.
 
-## Installation
+## Install SpeakerSight
 
-1. Download `SpeakerSight-v0.1.0.msi` from the [GitHub Releases](https://github.com/gavincadams/opendash-overlays/releases) page
+1. Download `SpeakerSight-v0.1.0.msi` from the [GitHub Releases](https://github.com/gadams999/opendash-overlays/releases) page
 2. Run the installer — it will install to `%ProgramFiles%\OpenDash\SpeakerSight\`
 3. A Start Menu shortcut and desktop shortcut are created automatically
 
@@ -85,7 +84,7 @@ Open Settings from the tray menu. The settings window has five categories:
 - **Aliases** — per-channel custom display names and avatar visibility
 - **About** — version information and project links
 
-See [Settings Reference](settings.md) for full details on every field.
+See [Configuration](configuration.md) for full details on every field.
 
 ## Repositioning the Overlay
 

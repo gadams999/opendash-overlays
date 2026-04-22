@@ -19,15 +19,6 @@ SpeakerSight is a lightweight Windows desktop application that displays an alway
 
 **v0.1.0** — Initial release. Supports a single active voice channel, Windows 10/11 only.
 
-## System Requirements
-
-| Requirement | Details |
-|---|---|
-| OS | Windows 10 (1903+) or Windows 11 |
-| Discord | Discord desktop app (stable or PTB), running and signed in |
-| .NET | .NET 10 runtime (bundled in MSI installer) |
-| Architecture | x64 only |
-
 ## Features
 
 - Active speaker overlay with configurable grace-period fade (0–2 s)
@@ -44,6 +35,7 @@ SpeakerSight is a lightweight Windows desktop application that displays an alway
 
 ## Next Steps
 
-- [Getting Started](getting-started.md) — install, authorize, and start using the overlay
-- [Settings Reference](settings.md) — all settings fields explained
+- [Requirements](requirements.md) — system and software prerequisites
+- [Installation](installation.md) — install, authorize, and start using the overlay
+- [Configuration](configuration.md) — all settings fields explained
 - [Troubleshooting](troubleshooting.md) — common issues and how to resolve them

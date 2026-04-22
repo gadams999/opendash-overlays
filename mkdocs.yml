@@ -23,8 +23,9 @@ nav:
     - Troubleshooting: wheel-overlay/troubleshooting.md
   - SpeakerSight:
     - Overview: speakersight/index.md
-    - Getting Started: speakersight/getting-started.md
-    - Settings: speakersight/settings.md
+    - Requirements: speakersight/requirements.md
+    - Installation: speakersight/installation.md
+    - Configuration: speakersight/configuration.md
     - Troubleshooting: speakersight/troubleshooting.md
   - Common Setup: common-setup/index.md
   - Contribute: contribute/index.md

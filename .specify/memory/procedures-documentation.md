@@ -62,15 +62,16 @@ version, or test commands change.
 
 ### Directory layout
 
+Each overlay app's docs section MUST contain exactly these five files (enforced by `hooks/validate_structure.py`):
+
 ```
 docs/
-└── wheel-overlay/
+└── {app-name}/
     ├── index.md           # Landing page / overview
-    ├── installation.md
-    ├── getting-started.md
-    ├── usage.md
-    ├── troubleshooting.md
-    └── changelog.md       # Links to or mirrors CHANGELOG.md entries
+    ├── requirements.md    # System and software prerequisites
+    ├── installation.md    # Install, first launch, and verify steps
+    ├── configuration.md   # Settings reference
+    └── troubleshooting.md # Common issues and resolutions
 mkdocs.yml                 # Site config; theme: material
 ```
 
@@ -92,9 +93,9 @@ references). Always run this before pushing documentation changes.
 
 ### Adding docs for a new overlay app
 
-1. Create `docs/{app-name}/` with at minimum `index.md` and `installation.md`.
-2. Add the app section to `mkdocs.yml` under `nav:`.
-3. Confirm `mkdocs build --strict` passes locally before opening the PR.
+1. Create `docs/{app-name}/` with all five required files: `index.md`, `requirements.md`, `installation.md`, `configuration.md`, `troubleshooting.md`.
+2. Add the app section to `mkdocs.yml` under `nav:` with all five pages listed (Overview, Requirements, Installation, Configuration, Troubleshooting).
+3. Confirm `mkdocs build --strict` passes locally before opening the PR — `hooks/validate_structure.py` will fail the build if any required page is missing.
 
 ### CI/CD deployment
 

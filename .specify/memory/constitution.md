@@ -1,16 +1,16 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 2.1.2 → 2.1.3
-Version bump type: PATCH — Replace fictional `discord-notify` branch-name examples
-with `speakersight` examples throughout Principle VI and the branching procedure,
-reflecting the project's actual overlay naming after the Discord Chat Overlay →
-SpeakerSight rename (2026-04-19).
+Version change: 2.1.3 → 2.2.0
+Version bump type: MINOR — Add mandatory 5-page doc structure rule to Principle VII,
+enforcing index.md / requirements.md / installation.md / configuration.md /
+troubleshooting.md for all overlay apps. Triggered by SpeakerSight v0.1.0 merge
+exposing that the validate_structure.py hook required this structure but the
+constitution did not document it.
 
 Modified principles:
-  - Principle VI: Branch Naming — example `discord-notify/v1.0.0` →
-    `speakersight/v1.0.0` in both valid-examples block and the invalid-examples
-    table comment. No rule changes.
+  - Principle VII: Documentation and Public Site — added rule mandating exactly five
+    required pages per overlay docs section, referencing validate_structure.py hook.
 
 Added sections:
   - None.
@@ -19,8 +19,9 @@ Removed sections:
   - None.
 
 Templates updated:
-  ✅ .specify/memory/constitution.md — this file (v2.1.3).
-  ✅ .specify/memory/procedures-branching.md — same example substitution.
+  ✅ .specify/memory/constitution.md — this file (v2.2.0).
+  ✅ .specify/memory/procedures-documentation.md — updated directory layout to the
+     correct 5-file required structure; updated "adding a new overlay" guidance.
   ⚠  .specify/templates/plan-template.md — no change needed (placeholders only).
   ⚠  .specify/templates/spec-template.md — no change needed (placeholders only).
   ⚠  .specify/templates/tasks-template.md — no change needed (placeholders only).
@@ -263,6 +264,13 @@ Non-negotiable rules:
   producing a broken site.
 - Documentation pages MUST be user-focused — no internal class names, file
   paths, or namespace references except in the Developer Guide section.
+- Every overlay app's `docs/{app-name}/` section MUST contain exactly five
+  pages: `index.md` (overview), `requirements.md` (system and software
+  prerequisites), `installation.md` (install and first-launch steps),
+  `configuration.md` (settings reference), and `troubleshooting.md` (common
+  issues). This structure is enforced at build time by
+  `hooks/validate_structure.py` and applies to all existing and new overlay
+  apps.
 - Every new user-facing feature MUST have corresponding documentation added or
   updated in `docs/{app-name}/` before the feature branch merges to `main`.
 
@@ -374,4 +382,4 @@ spec time.
 are MAJOR. New principles or new SHOULD guidance are MINOR. Typos, examples,
 and rationale additions are PATCH.
 
-**Version**: 2.1.3 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-04-19
+**Version**: 2.2.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-04-22

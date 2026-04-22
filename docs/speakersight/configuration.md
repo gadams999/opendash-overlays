@@ -1,9 +1,9 @@
 ---
-title: "Settings Reference"
+title: "Configuration"
 description: "All SpeakerSight settings fields explained with defaults and valid ranges"
 ---
 
-# Settings Reference
+# Configuration
 
 All settings are stored in `%APPDATA%\SpeakerSight\settings.json` and loaded automatically on startup. Changes made in the settings window take effect immediately (live preview) and are written to disk on **Save**.
 
